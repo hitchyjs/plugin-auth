@@ -1,0 +1,19 @@
+{
+  "name": "hitchy-plugin-auth",
+  "version": "0.1.0",
+  "description": "user authentication and authorization for Hitchy",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --recursive --ui bdd test/scripts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hitchyjs/plugin-auth.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hitchyjs/plugin-auth/issues"
+  },
+  "homepage": "https://github.com/hitchyjs/plugin-auth#readme"
+}
