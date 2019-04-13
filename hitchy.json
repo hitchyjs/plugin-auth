@@ -1,0 +1,7 @@
+{
+	"role": "auth",
+	"dependencies": [
+		"session",
+		"odm"
+	]
+}
