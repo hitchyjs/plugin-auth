@@ -1,5 +1,7 @@
 # hitchy-plugin-auth
 
+[![Build Status](https://travis-ci.org/hitchyjs/plugin-auth.svg?branch=master)](https://travis-ci.org/hitchyjs/plugin-auth)
+
 ## License
 
 MIT
