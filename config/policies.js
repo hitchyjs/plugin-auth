@@ -29,7 +29,5 @@
 "use strict";
 
 exports.policies = {
-	"/api/user": [
-		"Auth.requireAdmin",
-	],
+	"/api/user": "Auth.requireAdmin",
 };

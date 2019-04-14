@@ -36,7 +36,7 @@ module.exports = {
 		password: {
 			required: true,
 		},
-		roles: {
+		role: {
 			required: true,
 		},
 	},

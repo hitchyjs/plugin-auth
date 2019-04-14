@@ -48,9 +48,9 @@ module.exports = function() {
 							.then( hash => {
 								const user = new User();
 
-								user.properties.name = "admin";
-								user.properties.password = hash;
-								user.properties.role = "admin";
+								user.name = "admin";
+								user.password = hash;
+								user.role = "admin";
 
 								return user.save()
 									.then( () => user );
@@ -65,13 +65,13 @@ module.exports = function() {
 							if ( users && users.length === 1 ) {
 								const user = users[0];
 
-								return hashPassword( body.password, user.properties.password )
+								return hashPassword( body.password, user.password )
 									.then( hash => {
-										if ( hash.toString( "base64" ) === user.properties.password ) {
+										if ( hash.toString( "base64" ) === user.password ) {
 											return ( req.session.user = {
 												uuid: user.uuid,
-												name: user.properties.name,
-												roles: [user.properties.role],
+												name: user.name,
+												roles: [user.role],
 											} );
 										}
 
@@ -116,7 +116,7 @@ module.exports = function() {
 		},
 
 		dropAuth( req, res ) {
-			if ( req.session && req.user ) {
+			if ( req.session && req.session.user ) {
 				req.session.drop();
 			}
 
