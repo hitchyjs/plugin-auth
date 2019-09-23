@@ -28,8 +28,10 @@
 
 "use strict";
 
+const crypto = require( "crypto" );
+
 module.exports = {
-	attributes: {
+	props: {
 		name: {
 			required: true,
 		},
@@ -39,5 +41,67 @@ module.exports = {
 		role: {
 			required: true,
 		},
+	},
+	methods: {
+		/**
+		 * Derives salted hash from provided password.
+		 *
+		 * @param {string} cleartext cleartext password to be hashed
+		 * @param {string} salt salt or previously derived hash consisting salt to be re-used
+		 * @return {Promise<string>} promises derived hash
+		 */
+		hashPassword( cleartext, salt = null ) {
+			if ( !cleartext ) {
+				return Promise.reject( new TypeError( "missing cleartext password to be hashed" ) );
+			}
+
+			const hash = crypto.createHash( "sha512" );
+			let promise;
+
+			const _extracted = salt == null ? null : ( Buffer.isBuffer( salt ) ? salt : Buffer.from( salt, "base64" ) ).slice( 64 );
+
+			if ( _extracted && _extracted.length > 0 ) {
+				promise = Promise.resolve( _extracted );
+			} else {
+				promise = new Promise( ( resolve, reject ) => crypto.randomBytes( 16, ( error, buffer ) => {
+					if ( error ) {
+						reject( error );
+					} else {
+						resolve( buffer );
+					}
+				} ) );
+			}
+
+			return promise
+				.then( _salt => {
+
+					hash.update( _salt );
+					hash.update( Buffer.isBuffer( cleartext ) ? cleartext : Buffer.from( String( cleartext ), "utf8" ) );
+					hash.update( _salt );
+
+					return Buffer.concat( [ hash.digest(), _salt ] ).toString( "base64" );
+				} );
+		},
+
+		/**
+		 * Derives and saves salted hash from provided password.
+		 * @param{string} password cleartext password to be hashed
+		 * @return {Promise<string>} promises derived hash
+		 */
+		setPassword( password ) {
+			return this.hashPassword( password ).then( hashedPassword => {
+				this.password = hashedPassword;
+				return hashedPassword;
+			} );
+		},
+
+		/**
+		 * Derives and compares salted hash from provided password with saved password.
+		 * @param{string} password cleartext password to be hashed
+		 * @return {Promise<boolean>} promises true if hashed password matches else false
+		 */
+		verifyPassword( password ) {
+			return this.hashPassword( password, this.password ).then( hashedPassword => this.password === hashedPassword );
+		}
 	},
 };

@@ -28,3 +28,91 @@
 
 "use strict";
 
+const Path = require( "path" );
+const passport = require( "passport" );
+const LocalStrategy = require( "passport-local" ).Strategy;
+
+module.exports = {
+	initialize( options, myHandle ) {
+		const api = this;
+		const AlertLog = api.log( "hitchy:plugin:auth:alert" );
+		const DebugLog = api.log( "hitchy:plugin:auth:debug" );
+
+		const config = api.config.auth || {};
+		const declaredStrategies = config.strategies || {};
+		const declaredStrategyNames = Object.keys( declaredStrategies );
+
+		const { runtime: { models: { User } } } = api;
+
+		passport.serializeUser( function( user, done ) {
+			done( null, user );
+		} );
+
+		if ( declaredStrategyNames.length ) {
+			const folder = options.projectFolder;
+			let info;
+			try {
+				info = require( Path.resolve( folder, "package.json" ) );
+			} catch ( e ) {
+				info = {};
+			}
+			const { dependencies = {} } = info;
+
+			const pattern = /^passport-/;
+			const providedStrategies = Object.keys( dependencies ).filter( dependency => pattern.test( dependency ) );
+
+			for ( let declaredStrategy of declaredStrategyNames ) {
+				if ( !pattern.test( declaredStrategy ) ) {
+					declaredStrategy = `passport-${declaredStrategy}`;
+				}
+				if ( providedStrategies.indexOf( declaredStrategy ) < 0 ) {
+					AlertLog( "strategy is declared but not found in the dependencies of your hitchy project:", declaredStrategy );
+				}
+				const strategy = declaredStrategies[declaredStrategy];
+				if ( declaredStrategy !== null )
+					try {
+						passport.use( strategy );
+					} catch ( e ) {
+						AlertLog( "strategy not compatible with passport.use:", declaredStrategy, e );
+					}
+			}
+		} else if ( !( declaredStrategies.local || declaredStrategies["passport-local"] ) ) {
+			passport.use( new LocalStrategy(
+				function( name, password, done ) {
+					User.find( { eq: { name: "name", value: name } }, {} ,{ loadRecords: true } ).then( matches => {
+						if ( !matches ) {
+							return done( null, false, { message: "Incorrect username." } );
+						}
+						for ( const user of matches ) {
+							if ( user.verifyPassword( password ) ) {
+								return done( null, user );
+							}
+						}
+						return done( null, false, { message: "Incorrect password." } );
+					} ).catch( err => {
+						return done( err );
+					} );
+				} )
+			);
+		}
+
+		User.find( { eq: { name: "role", value: "admin" }, } )
+			.then( matches => {
+				if ( matches && matches.length > 0 ) {
+					return matches;
+				}
+
+				const user = new User();
+
+				user.name = "admin";
+				user.role = "admin";
+				return user.setPassword( "nimda" )
+					.then( () => user.save() )
+					.then( () => user );
+			} )
+			.catch( err => {
+				AlertLog( err );
+			} );
+	}
+};
+

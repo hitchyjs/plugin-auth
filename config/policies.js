@@ -28,6 +28,14 @@
 
 "use strict";
 
-exports.policies = {
-	"/api/user": "Auth.requireAdmin",
+module.exports = function( options ) {
+	const api = this;
+
+	return {
+		policies: {
+			"/": "Auth.initialize",
+			"/api/user": "Auth.requireAdmin",
+			"POST /api/auth/login": ["Auth.authenticate"],
+		}
+	};
 };

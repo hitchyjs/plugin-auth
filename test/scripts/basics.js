@@ -67,6 +67,7 @@ describe( "Hitchy instance with plugin for server-side user authentication and a
 		return HitchyDev.start( {
 			extensionFolder: Path.resolve( __dirname, "../.." ),
 			testProjectFolder: Path.resolve( __dirname, "../project" ),
+			debug: true,
 		} )
 			.then( s => {
 				server = s;
@@ -103,7 +104,7 @@ describe( "Hitchy instance with plugin for server-side user authentication and a
 	} );
 
 	it( "supports authentication of default user using POSTed form data", () => {
-		return HitchyDev.query.post( "/api/auth/login", "name=admin&password=nimda", {
+		return HitchyDev.query.post( "/api/auth/login", "username=admin&password=nimda", {
 			cookie: `sessionId=${sid}`,
 			"Content-Type": "application/x-www-form-urlencoded",
 		} )

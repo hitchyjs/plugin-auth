@@ -28,8 +28,14 @@
 
 "use strict";
 
-exports.routes = {
-	"POST /api/auth/login": "user.auth",
-	"GET /api/auth/current": "user.getCurrent",
-	"GET /api/auth/logout": "user.dropAuth",
+module.exports = function( options ) {
+	const api = this;
+
+	return {
+		routes: {
+			"POST /api/auth/login": "user.auth",
+			"GET /api/auth/current": "user.getCurrent",
+			"GET /api/auth/logout": "user.dropAuth",
+		}
+	};
 };
