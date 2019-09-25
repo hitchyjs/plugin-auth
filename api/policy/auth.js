@@ -28,13 +28,14 @@
 
 "use strict";
 
-const passport = require( "passport" );
+const Passport = require( "passport" );
 
 exports.initialize = ( req, res, next ) => {
-	passport.initialize()( req, res, err => {
-		if ( err ) next( err );
-		else {
-			passport.session()( req, res, next );
+	Passport.initialize()( req, res, err => {
+		if ( err ) {
+			next( err );
+		} else {
+			Passport.session()( req, res, next );
 		}
 	} );
 };
@@ -43,9 +44,10 @@ exports.authenticate = ( req, res, next ) => {
 	const { strategy } = req.params;
 	const { config } = req.hitchy;
 	const { defaultStrategy } = config.auth || {};
+
 	req.fetchBody().then( body => {
 		req.body = body;
-		passport.authenticate( strategy || defaultStrategy || "local" )( req, res, next );
+		Passport.authenticate( strategy || defaultStrategy || "local" )( req, res, next );
 	} ).catch( next );
 };
 

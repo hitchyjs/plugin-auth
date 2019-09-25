@@ -29,8 +29,7 @@
 "use strict";
 
 const Path = require( "path" );
-const passport = require( "passport" );
-const LocalStrategy = require( "passport-local" ).Strategy;
+const Passport = require( "passport" );
 
 module.exports = function( options, plugins ) {
 	const api = this;
@@ -39,17 +38,16 @@ module.exports = function( options, plugins ) {
 
 	const myApi = {
 		initialize() {
+			const { models: { User }, services: { AuthStrategies } } = api.runtime;
 			const config = api.config.auth || {};
 			const declaredStrategies = config.strategies || {};
 			const declaredStrategyNames = Object.keys( declaredStrategies );
 
-			const { runtime: { models: { User } } } = api;
-
-			passport.serializeUser( ( user, done ) => {
+			Passport.serializeUser( ( user, done ) => {
 				done( null, user.uuid );
 			} );
 
-			passport.deserializeUser( ( uuid, done ) => {
+			Passport.deserializeUser( ( uuid, done ) => {
 				new User( uuid )
 					.load()
 					.then( user => done( null, user ) )
@@ -57,15 +55,15 @@ module.exports = function( options, plugins ) {
 			} );
 
 			if ( declaredStrategyNames.length ) {
-				const folder = options.projectFolder;
 				let info;
+
 				try {
-					info = require( Path.resolve( folder, "package.json" ) );
+					info = require( Path.resolve( options.projectFolder, "package.json" ) );
 				} catch ( e ) {
 					info = {};
 				}
-				const { dependencies = {} } = info;
 
+				const { dependencies = {} } = info;
 				const pattern = /^passport-/;
 				const providedStrategies = Object.keys( dependencies ).filter( dependency => pattern.test( dependency ) );
 
@@ -73,35 +71,22 @@ module.exports = function( options, plugins ) {
 					if ( !pattern.test( declaredStrategy ) ) {
 						declaredStrategy = `passport-${declaredStrategy}`;
 					}
+
 					if ( providedStrategies.indexOf( declaredStrategy ) < 0 ) {
-						AlertLog( "strategy is declared but not found in the dependencies of your hitchy project:", declaredStrategy );
-					}
-					const strategy = declaredStrategies[declaredStrategy];
-					if ( declaredStrategy !== null )
-						try {
-							passport.use( strategy );
-						} catch ( e ) {
-							AlertLog( "strategy not compatible with passport.use:", declaredStrategy, e );
+						AlertLog( "strategy is declared but not found in the dependencies of your Hitchy project:", declaredStrategy );
+					} else {
+						const strategy = declaredStrategies[declaredStrategy];
+						if ( declaredStrategy != null ) {
+							try {
+								Passport.use( strategy );
+							} catch ( e ) {
+								AlertLog( "strategy not compatible with passport.use:", declaredStrategy, e );
+							}
 						}
+					}
 				}
 			} else if ( !( declaredStrategies.local || declaredStrategies["passport-local"] ) ) {
-				passport.use( new LocalStrategy(
-					function( name, password, done ) {
-						User.find( { eq: { name: "name", value: name } }, {} ,{ loadRecords: true } ).then( matches => {
-							if ( !matches ) {
-								return done( null, false, { message: "Incorrect username." } );
-							}
-							for ( const user of matches ) {
-								if ( user.verifyPassword( password ) ) {
-									return done( null, user );
-								}
-							}
-							return done( null, false, { message: "Incorrect password." } );
-						} ).catch( err => {
-							return done( err );
-						} );
-					} )
-				);
+				Passport.use( AuthStrategies.local );
 			}
 
 			User.find( { eq: { name: "role", value: "admin" }, } )
@@ -110,17 +95,17 @@ module.exports = function( options, plugins ) {
 						return matches;
 					}
 
+					DebugLog( "creating admin user" );
+
 					const user = new User();
 
 					user.name = "admin";
 					user.role = "admin";
+
 					return user.setPassword( "nimda" )
-						.then( () => user.save() )
-						.then( () => user );
+						.then( () => user.save() );
 				} )
-				.catch( err => {
-					AlertLog( err );
-				} );
+				.catch( AlertLog );
 		},
 
 		policies: {
