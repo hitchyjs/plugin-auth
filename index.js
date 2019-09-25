@@ -45,8 +45,15 @@ module.exports = function( options ) {
 
 			const { runtime: { models: { User } } } = api;
 
-			passport.serializeUser( function( user, done ) {
-				done( null, user );
+			passport.serializeUser( ( user, done ) => {
+				done( null, user.uuid );
+			} );
+
+			passport.deserializeUser( ( uuid, done ) => {
+				new User( uuid )
+					.load()
+					.then( user => done( null, user ) )
+					.catch( done );
 			} );
 
 			if ( declaredStrategyNames.length ) {
