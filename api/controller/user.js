@@ -28,8 +28,6 @@
 
 "use strict";
 
-const adminUser = null;
-
 module.exports = function() {
 	const api = this;
 
@@ -50,7 +48,11 @@ module.exports = function() {
 				.status( 200 )
 				.json( {
 					success: true,
-					authenticated: ( req.session && req.session.user ) || false,
+					authenticated: req.user ? {
+						uuid: req.user.uuid,
+						name: req.user.name,
+						roles: req.user.roles,
+					} : false,
 				} );
 		},
 
