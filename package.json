@@ -18,18 +18,18 @@
   },
   "homepage": "https://github.com/hitchyjs/plugin-auth#readme",
   "devDependencies": {
-    "eslint": "^5.16.0",
-    "eslint-config-cepharum": "^1.0.8",
-    "eslint-plugin-promise": "^4.1.1",
-    "hitchy-server-dev-tools": "^0.1.1",
+    "eslint": "^6.4.0",
+    "eslint-config-cepharum": "^1.0.10",
+    "eslint-plugin-promise": "^4.2.1",
+    "hitchy-server-dev-tools": "^0.1.2",
     "mocha": "^6.2.0",
     "should": "^13.2.3",
     "should-http": "^0.1.1"
   },
   "peerDependencies": {
     "hitchy-plugin-odem": "^0.4.1",
-    "hitchy-plugin-cookies": "^0.1.0",
-    "hitchy-plugin-session": "^0.1.1"
+    "hitchy-plugin-cookies": "^0.1.1",
+    "hitchy-plugin-session": "^0.1.2"
   },
   "dependencies": {
     "passport": "^0.4.0",
