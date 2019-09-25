@@ -28,20 +28,41 @@
 
 "use strict";
 
-exports.requireAuth = ( req, res, next ) => {
-	if ( !req.session || !req.session.user ) {
+const passport = require( "passport" );
+
+exports.initialize = ( req, res, next ) => {
+	passport.initialize()( req, res, err => {
+		if ( err ) next( err );
+		else {
+			passport.session()( req, res, next );
+		}
+	} );
+};
+
+exports.authenticate = ( req, res, next ) => {
+	const { strategy } = req.params;
+	const { config } = req.hitchy;
+	const { defaultStrategy } = config.auth || {};
+	req.fetchBody().then( body => {
+		req.body = body;
+		passport.authenticate( strategy || defaultStrategy || "local" )( req, res, next );
+	} ).catch( next );
+};
+
+exports.requireAuthentication = ( req, res, next ) => {
+	if ( req.user ) {
+		next();
+	} else {
 		res
 			.status( 403 )
 			.json( {
 				error: "access forbidden",
 			} );
-	} else {
-		next();
 	}
 };
 
 exports.requireAdmin = ( req, res, next ) => {
-	if ( !req.session || !req.session.user || req.session.user.roles.indexOf( "admin" ) < 0 ) {
+	if ( !req.user || req.user.roles.indexOf( "admin" ) < 0 ) {
 		res
 			.status( 403 )
 			.json( {

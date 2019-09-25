@@ -1,6 +1,7 @@
 {
 	"role": "auth",
 	"dependencies": [
+	  	"cookies",
 		"session",
 		"odm"
 	]
