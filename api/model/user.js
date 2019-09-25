@@ -42,6 +42,11 @@ module.exports = {
 			required: true,
 		},
 	},
+	computed: {
+		roles() {
+			return ( this.role || "" ).trim().split( /\s*,[,\s]*/ );
+		},
+	},
 	methods: {
 		/**
 		 * Derives salted hash from provided password.
