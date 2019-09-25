@@ -32,13 +32,13 @@ const Path = require( "path" );
 const passport = require( "passport" );
 const LocalStrategy = require( "passport-local" ).Strategy;
 
-module.exports = function() {
-	return {
-		initialize( options ) {
-			const api = this;
-			const AlertLog = api.log( "hitchy:plugin:auth:alert" );
-			const DebugLog = api.log( "hitchy:plugin:auth:debug" );
+module.exports = function( options ) {
+	const api = this;
+	const AlertLog = api.log( "hitchy:plugin:auth:alert" );
+	const DebugLog = api.log( "hitchy:plugin:auth:debug" );
 
+	return {
+		initialize() {
 			const config = api.config.auth || {};
 			const declaredStrategies = config.strategies || {};
 			const declaredStrategyNames = Object.keys( declaredStrategies );
