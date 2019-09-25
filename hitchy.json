@@ -4,5 +4,8 @@
 	  	"cookies",
 		"session",
 		"odm"
+	],
+	"dependants": [
+		"odm-provider"
 	]
 }
