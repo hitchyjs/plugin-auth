@@ -2,28 +2,35 @@
 
 const LocalStrategy = require( "passport-local" ).Strategy;
 
-module.exports = function( options ) {
+module.exports = function() {
 	const api = this;
-	const { runtime: { models: { User } } } = api;
 
-	 return {
-		stategies: {
-			local: new LocalStrategy(
-				function( name, password, done ) {
-					User.find( { eq: { name: "name", value: name } }, {} ,{ loadRecords: true } ).then( matches => {
-						if ( !matches ) {
-							return done( null, false, { message: "Incorrect username." } );
-						}
-						for ( const user of matches ) {
-							if ( user.verifyPassword( password ) ) {
-								return done( null, user );
+	return {
+		strategies: {
+			local: new LocalStrategy( ( name, password, done ) => {
+				api.runtime.models.User
+					.find( { eq: { name: "name", value: name } }, {} ,{ loadRecords: true } )
+					.then( matches => {
+						switch ( matches.length ) {
+							case 0 :
+								return done( null, false, { message: "Incorrect username." } );
+
+							case 1 : {
+								const user = matches[0];
+
+								if ( user.verifyPassword( password ) ) {
+									return done( null, user );
+								}
+
+								return done( null, false, { message: "Incorrect password." } );
 							}
+
+							default :
+								return done( null, false, { message: "Ambiguous username." } );
 						}
-						return done( null, false, { message: "Incorrect password." } );
-					} ).catch( err => {
-						return done( err );
-					} );
-				} )
-		}
-	 };
+					} )
+					.catch( done );
+			} ),
+		},
+	};
 };
