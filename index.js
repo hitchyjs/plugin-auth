@@ -32,12 +32,12 @@ const Path = require( "path" );
 const passport = require( "passport" );
 const LocalStrategy = require( "passport-local" ).Strategy;
 
-module.exports = function( options ) {
+module.exports = function( options, plugins ) {
 	const api = this;
 	const AlertLog = api.log( "hitchy:plugin:auth:alert" );
 	const DebugLog = api.log( "hitchy:plugin:auth:debug" );
 
-	return {
+	const myApi = {
 		initialize() {
 			const config = api.config.auth || {};
 			const declaredStrategies = config.strategies || {};
@@ -135,4 +135,12 @@ module.exports = function( options ) {
 			"GET /api/auth/logout": "user.dropAuth",
 		},
 	};
+
+	if ( plugins["odm-provider"] ) {
+		// application is using hitchy-plugin-odem-rest or some related drop-in
+		// -> assure to be processed before that
+		myApi.$meta.dependants = ["odm-provider"];
+	}
+
+	return myApi;
 };
