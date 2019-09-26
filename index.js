@@ -55,33 +55,13 @@ module.exports = function( options, plugins ) {
 			} );
 
 			if ( declaredStrategyNames.length ) {
-				let info;
-
-				try {
-					info = require( Path.resolve( options.projectFolder, "package.json" ) );
-				} catch ( e ) {
-					info = {};
-				}
-
-				const { dependencies = {} } = info;
-				const pattern = /^passport-/;
-				const providedStrategies = Object.keys( dependencies ).filter( dependency => pattern.test( dependency ) );
-
-				for ( let declaredStrategy of declaredStrategyNames ) {
-					if ( !pattern.test( declaredStrategy ) ) {
-						declaredStrategy = `passport-${declaredStrategy}`;
-					}
-
-					if ( providedStrategies.indexOf( declaredStrategy ) < 0 ) {
-						AlertLog( "strategy is declared but not found in the dependencies of your Hitchy project:", declaredStrategy );
-					} else {
-						const strategy = declaredStrategies[declaredStrategy];
-						if ( declaredStrategy != null ) {
-							try {
-								Passport.use( strategy );
-							} catch ( e ) {
-								AlertLog( "strategy not compatible with passport.use:", declaredStrategy, e );
-							}
+				for ( const declaredStrategy of declaredStrategyNames ) {
+					const strategy = declaredStrategies[declaredStrategy];
+					if ( declaredStrategy != null ) {
+						try {
+							Passport.use( strategy );
+						} catch ( e ) {
+							AlertLog( "strategy not compatible with passport.use:", declaredStrategy, e );
 						}
 					}
 				}
@@ -112,6 +92,7 @@ module.exports = function( options, plugins ) {
 			"/": "Auth.initialize",
 			"/api/user": "Auth.requireAdmin",
 			"POST /api/auth/login": ["Auth.authenticate"],
+			"GET /api/auth/logout": ["Auth.dropAuth"],
 		},
 
 		routes: {

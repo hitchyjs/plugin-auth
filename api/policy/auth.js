@@ -31,18 +31,18 @@
 const Passport = require( "passport" );
 
 exports.initialize = ( req, res, next ) => {
-	Passport.initialize()( req, res, err => {
-		if ( err ) {
-			next( err );
+	Passport.initialize()( req, res, initializeError => {
+		if ( initializeError ) {
+			next( initializeError );
 		} else {
-			Passport.session()( req, res, err => {
+			Passport.session()( req, res, sessionError => {
 				if ( req.session.user ) {
 					const { name, roles } = req.session.user;
 
 					res.set( "X-Authenticated-As", name );
 					res.set( "X-Authorized-As", roles.join( "," ) );
 				}
-				next( err );
+				next( sessionError );
 			} );
 		}
 	} );
@@ -52,6 +52,7 @@ exports.authenticate = ( req, res, next ) => {
 	const { strategy } = req.params;
 	const { config } = req.hitchy;
 	const { defaultStrategy } = config.auth || {};
+	console.log( defaultStrategy );
 
 	req.fetchBody().then( body => {
 		req.body = body;
@@ -68,6 +69,20 @@ exports.authenticate = ( req, res, next ) => {
 			next( err );
 		} );
 	} ).catch( next );
+};
+
+exports.dropAuth = ( req, res, next ) => {
+	if ( req.session && req.session.user ) {
+		try {
+			req.session.drop();
+			req.logout();
+			res.set( "X-Authenticated-As", undefined );
+			res.set( "X-Authorized-As", undefined );
+		} catch ( e ) {
+			next( e );
+		}
+	}
+	next();
 };
 
 exports.requireAuthentication = ( req, res, next ) => {

@@ -66,7 +66,7 @@ describe( "Hitchy instance with plugin for server-side user authentication and a
 	before( "starting hitchy", () => {
 		return HitchyDev.start( {
 			extensionFolder: Path.resolve( __dirname, "../.." ),
-			testProjectFolder: Path.resolve( __dirname, "../project" ),
+			testProjectFolder: Path.resolve( __dirname, "../project/basic" ),
 			options: {
 				// debug: true,
 			},

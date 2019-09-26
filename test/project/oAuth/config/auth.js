@@ -27,40 +27,35 @@
  */
 
 "use strict";
+const { OAuthStrategy } = require( "passport-oauth" );
 
 module.exports = function() {
 	const api = this;
+	const { User } = api.runtime.models;
 
 	return {
-		auth( req, res ) {
-			res.format( {
-				default() {
-					res.json( {
-						success: true,
-						authenticated: Boolean( req.user ),
+		auth: {
+			strategies: {
+				oauth: new OAuthStrategy( {
+					requestTokenURL: "http://term.ie/oauth/example/request_token.php",
+					accessTokenURL: "http://term.ie/oauth/example/access_token.php",
+					userAuthorizationURL: "http://term.ie/oauth/example/echo_api.php",
+					consumerKey: "key",
+					consumerSecret: "secret",
+					callbackURL: "http://127.0.0.1:3000/api/auth/login",
+					signatureMethod: "RSA-SHA1"
+				},
+				function( token, tokenSecret, profile, cb ) {
+					console.log( "oauth callback", profile );
+					return User.find( { eq: { name: "uuid", value: profile.uuid } }, {} ,{ loadRecords: true } ).then( user => {
+						return cb( undefined, user[0] );
+					} ).catch( err => {
+						return cb( err, undefined );
 					} );
 				}
-			} );
-		},
-
-		getCurrent( req, res ) {
-			res
-				.status( 200 )
-				.json( {
-					success: true,
-					authenticated: req.user ? {
-						uuid: req.user.uuid,
-						name: req.user.name,
-						roles: req.user.roles,
-					} : false,
-				} );
-		},
-
-		dropAuth( req, res ) {
-			res.status( 200 ).json( {
-				success: true,
-			} );
-		},
+				)
+			},
+			defaultStrategy: "oauth",
+		}
 	};
 };
-
