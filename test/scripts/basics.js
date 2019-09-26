@@ -193,7 +193,7 @@ describe( "Hitchy instance with plugin for server-side user authentication and a
 	} );
 
 	it( "supports authentication of default user using POSTed JSON data", () => {
-		return HitchyDev.query.post( "/api/auth/login", JSON.stringify( { name: "admin", password: "nimda" } ), {
+		return HitchyDev.query.post( "/api/auth/login", JSON.stringify( { username: "admin", password: "nimda" } ), {
 			cookie: `sessionId=${sid}`,
 			"Content-Type": "application/json",
 		} )

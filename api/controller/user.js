@@ -59,6 +59,7 @@ module.exports = function() {
 		dropAuth( req, res ) {
 			if ( req.session && req.session.user ) {
 				req.session.drop();
+				req.logout();
 			}
 
 			res.status( 200 ).json( {

@@ -44,10 +44,10 @@ module.exports = function( options, plugins ) {
 			const declaredStrategyNames = Object.keys( declaredStrategies );
 
 			Passport.serializeUser( ( user, done ) => {
-				done( null, user.uuid );
+				done( null, { uuid: user.uuid, name: user.name, roles: user.roles } );
 			} );
 
-			Passport.deserializeUser( ( uuid, done ) => {
+			Passport.deserializeUser( ( { uuid }, done ) => {
 				new User( uuid )
 					.load()
 					.then( user => done( null, user ) )

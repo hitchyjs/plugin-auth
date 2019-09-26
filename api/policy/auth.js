@@ -35,7 +35,15 @@ exports.initialize = ( req, res, next ) => {
 		if ( err ) {
 			next( err );
 		} else {
-			Passport.session()( req, res, next );
+			Passport.session()( req, res, err => {
+				if ( req.session.user ) {
+					const { name, roles } = req.session.user;
+
+					res.set( "X-Authenticated-As", name );
+					res.set( "X-Authorized-As", roles.join( "," ) );
+				}
+				next( err );
+			} );
 		}
 	} );
 };
@@ -47,7 +55,18 @@ exports.authenticate = ( req, res, next ) => {
 
 	req.fetchBody().then( body => {
 		req.body = body;
-		Passport.authenticate( strategy || defaultStrategy || "local" )( req, res, next );
+		Passport.authenticate( strategy || defaultStrategy || "local" )( req, res, err => {
+			if ( req.user ) {
+				const { uuid, name, roles } = req.user;
+
+				req.session.user = { uuid, name, roles };
+				res.set( "X-Authenticated-As", name );
+				res.set( "X-Authorized-As", roles.join( "," ) );
+			} else {
+				req.session.user = null;
+			}
+			next( err );
+		} );
 	} ).catch( next );
 };
 
