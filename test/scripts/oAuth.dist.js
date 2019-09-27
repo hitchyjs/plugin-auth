@@ -66,7 +66,7 @@ describe( "Hitchy instance with plugin for oAuth user authentication and authori
 
 	before( "starting hitchy", () => {
 		return HitchyDev.start( {
-			extensionFolder: Path.resolve( __dirname, "../.." ),
+			pluginsFolder: Path.resolve( __dirname, "../.." ),
 			testProjectFolder: Path.resolve( __dirname, "../project/oAuth" ),
 			options: {
 				// debug: true,
