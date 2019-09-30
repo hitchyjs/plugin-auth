@@ -5,13 +5,14 @@
   "main": "index.js",
   "scripts": {
     "test": "hitchy-pm session cookies odem --exec mocha --recursive --ui bdd test/scripts/*.spec.js",
-    "style": "eslint .",
+    "lint": "eslint .",
     "start": "hitchy-pm session cookies odem --exec hitchy --project test/project/oAuth --plugins . --debug"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hitchyjs/plugin-auth.git"
   },
+  "pre-commit": "lint",
   "author": "",
   "license": "MIT",
   "bugs": {

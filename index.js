@@ -28,7 +28,6 @@
 
 "use strict";
 
-const Path = require( "path" );
 const Passport = require( "passport" );
 
 module.exports = function( options, plugins ) {
@@ -44,10 +43,10 @@ module.exports = function( options, plugins ) {
 			const declaredStrategyNames = Object.keys( declaredStrategies );
 
 			Passport.serializeUser( ( user, done ) => {
-				done( null, { uuid: user.uuid, name: user.name, roles: user.roles } );
+				done( null, user.uuid );
 			} );
 
-			Passport.deserializeUser( ( { uuid }, done ) => {
+			Passport.deserializeUser( ( uuid, done ) => {
 				new User( uuid )
 					.load()
 					.then( user => done( null, user ) )
@@ -66,7 +65,7 @@ module.exports = function( options, plugins ) {
 					}
 				}
 			} else if ( !( declaredStrategies.local || declaredStrategies["passport-local"] ) ) {
-				Passport.use( AuthStrategies.local );
+				Passport.use( AuthStrategies.generateLocal() );
 			}
 
 			User.find( { eq: { name: "role", value: "admin" }, } )
@@ -92,11 +91,13 @@ module.exports = function( options, plugins ) {
 			"/": "Auth.initialize",
 			"/api/user": "Auth.requireAdmin",
 			"POST /api/auth/login": ["Auth.authenticate"],
+			"GET /api/auth/login": ["Auth.authenticate"],
 			"GET /api/auth/logout": ["Auth.dropAuth"],
 		},
 
 		routes: {
 			"POST /api/auth/login": "user.auth",
+			"GET /api/auth/login": "user.auth",
 			"GET /api/auth/current": "user.getCurrent",
 			"GET /api/auth/logout": "user.dropAuth",
 		},

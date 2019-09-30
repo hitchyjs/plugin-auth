@@ -50,13 +50,12 @@ exports.initialize = ( req, res, next ) => {
 
 exports.authenticate = ( req, res, next ) => {
 	const { strategy } = req.params;
-	const { config } = req.hitchy;
-	const { defaultStrategy } = config.auth || {};
-	console.log( defaultStrategy );
+	const { services } = req.hitchy.runtime;
+	const defaultStrategy = services.AuthStrategies.defaultStrategy();
 
 	req.fetchBody().then( body => {
 		req.body = body;
-		Passport.authenticate( strategy || defaultStrategy || "local" )( req, res, err => {
+		Passport.authenticate( strategy || defaultStrategy )( req, res, err => {
 			if ( req.user ) {
 				const { uuid, name, roles } = req.user;
 
@@ -64,7 +63,8 @@ exports.authenticate = ( req, res, next ) => {
 				res.set( "X-Authenticated-As", name );
 				res.set( "X-Authorized-As", roles.join( "," ) );
 			} else {
-				req.session.user = null;
+				console.log( "session.drop" );
+				req.session.drop();
 			}
 			next( err );
 		} );

@@ -30,7 +30,6 @@
 
 const Path = require( "path" );
 
-const { describe, before, after, it } = require( "mocha" );
 const HitchyDev = require( "hitchy-server-dev-tools" );
 
 require( "should" );
