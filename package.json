@@ -6,13 +6,14 @@
   "scripts": {
     "test": "hitchy-pm session cookies odem --exec mocha --recursive --ui bdd test/scripts/*.spec.js",
     "lint": "eslint .",
-    "start": "hitchy-pm session cookies odem --exec hitchy --project test/project/oAuth --plugins . --debug"
+    "start": "hitchy-pm session cookies odem --exec hitchy --project test/project/oAuth --plugins . --debug",
+    "docs:dev": "vuepress dev docs-source",
+    "docs:build": "vuepress build docs-source"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hitchyjs/plugin-auth.git"
   },
-  "pre-commit": "lint",
   "author": "",
   "license": "MIT",
   "bugs": {
@@ -28,14 +29,13 @@
     "passport-http-oauth": "^0.1.3",
     "passport-oauth": "^1.0.0",
     "should": "^13.2.3",
-    "should-http": "^0.1.1"
-  },
-  "peerDependencies": {
-    "hitchy-plugin-odem": "^0.4.2",
-    "hitchy-plugin-cookies": "^0.1.1",
-    "hitchy-plugin-session": "^0.1.4"
+    "should-http": "^0.1.1",
+    "vuepress": "^1.1.0"
   },
   "dependencies": {
+    "hitchy-plugin-odem": "^0.4.2",
+    "hitchy-plugin-cookies": "^0.1.1",
+    "hitchy-plugin-session": "^0.1.4",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0"
   }

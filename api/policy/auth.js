@@ -97,6 +97,20 @@ exports.requireAuthentication = ( req, res, next ) => {
 	}
 };
 
+exports.requireAuthorization = ( req, res, next ) => {
+	const { url } = req;
+
+	if ( req.user ) {
+		next();
+	} else {
+		res
+			.status( 403 )
+			.json( {
+				error: "access forbidden",
+			} );
+	}
+};
+
 exports.requireAdmin = ( req, res, next ) => {
 	if ( !req.user || req.user.roles.indexOf( "admin" ) < 0 ) {
 		res

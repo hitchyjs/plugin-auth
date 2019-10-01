@@ -25,6 +25,7 @@ The plugin injects special endpoints for managing a user's authentication.
 | endpoint | method | description |
 |----------|--------|-------------|
 | `/api/auth/login` | POST | Takes username and password in request body and uses them for authenticating selected user. |
+| `/api/auth/login` | GET | Does the same as the POST method and is mainly here as a redirect URI for external authorization |
 | `/api/auth/logout` | GET | Drops information on previously authenticated user. |
 | `/api/auth/check` | GET | Fetches status information on currently authenticated user. |
 
@@ -53,7 +54,6 @@ The endpoint `/api/auth/login` is always checking whether there is at least one 
 
 ### Last But Not Least
 
-* Integrate [passport](http://www.passportjs.org/) or similar tool.
 * Improve authorization system by adding additional level of customizable access control.
 
 ## Note

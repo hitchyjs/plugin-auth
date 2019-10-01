@@ -37,7 +37,7 @@ module.exports = function( options, plugins ) {
 
 	const myApi = {
 		initialize() {
-			const { models: { User }, services: { AuthStrategies } } = api.runtime;
+			const { models: { User, Authz }, services: { AuthStrategies, AuthLibrary } } = api.runtime;
 			const config = api.config.auth || {};
 			const declaredStrategies = config.strategies || {};
 			const declaredStrategyNames = Object.keys( declaredStrategies );
