@@ -29,11 +29,33 @@
 
 module.exports = function( options ) {
 	const api = this;
+	const { services, models } = api.runtime;
 
 	return {
-		authUUID: { type: "uuid", required: true },
-		role: { type: "string" },
-		userUUID: { type: "uuid" },
-		positive: { type: "boolean" }
+		props: {
+			authUUID: { type: "uuid", required: true },
+			role: { type: "string" },
+			userUUID: { type: "uuid" },
+			positive: { type: "boolean" }
+		},
+		hooks: {
+			afterValidate( errors ) {
+				return Promise.all( [
+					new models.Auth( this.authUUID ).$exists,
+					this.userUUID ? new models.User( this.userUUID ).$exists : undefined,
+				] ).then( ( [ exists, userExists ] ) => {
+					if ( !exists ) errors.push( new TypeError( "unknown authUUID" ) );
+					if ( userExists != null && !userExists ) errors.push( new TypeError( "unknown userUUID" ) );
+					return errors;
+				} );
+			},
+			afterSave() {
+				services.AuthLibrary.addAuthz( this );
+			},
+			afterRemove() {
+				services.AuthLibrary.removeAuthz( this );
+			}
+		}
+
 	};
 };

@@ -31,8 +31,10 @@ module.exports = function( options ) {
 	const api = this;
 
 	return {
-		spec: {
-			type: "string"
+		props: {
+			spec: {
+				type: "string"
+			}
 		}
 	};
 };
