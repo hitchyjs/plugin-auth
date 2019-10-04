@@ -26,72 +26,144 @@
  * @author: cepharum
  */
 
+/* eslint-disable max-nested-callbacks */
+
 "use strict";
 
 const Path = require( "path" );
 
 const HitchyDev = require( "hitchy-server-dev-tools" );
 
-require( "should" );
+const Should = require( "should" );
 require( "should-http" );
 
-
-describe( "AuthLibrary", () => {
+describe( "AuthRuleLibrary", () => {
 	let server = null;
 
-	before( "starting hitchy", () => {
-		return HitchyDev.start( { pluginsFolder: Path.resolve( __dirname, "../../.." ),
-			testProjectFolder: Path.resolve( __dirname, "../../project/basic" ),
-			options: {
-				// debug: true,
-			}, } )
-			.then( s => {
-				server = s;
+	describe( "AuthRule", () => {
+		before( "starting hitchy", () => {
+			return HitchyDev.start( { pluginsFolder: Path.resolve( __dirname, "../../.." ),
+				testProjectFolder: Path.resolve( __dirname, "../../project/basic" ),
+				options: {
+					// debug: true,
+				}, } )
+				.then( s => {
+					server = s;
+				} );
+		} );
+
+		after( "stopping hitchy", () => {
+			return server ? HitchyDev.stop( server ) : undefined;
+		} );
+		describe( "with exisiting spec", () => {
+			let UUID;
+			it( `adding AuthSpec`, () => {
+				const { AuthSpec } = server.$hitchy.hitchy.runtime.models;
+				const authSpec = new AuthSpec();
+				authSpec.spec = `model.read`;
+				return authSpec.save()
+					.then( auth => {
+						UUID = auth.uuid;
+					} )
+					.then( () => AuthSpec.list() )
+					.then( entries => entries.length.should.be.eql( 1 ) );
 			} );
+
+			it( `adding AuthRule`, () => {
+				const { AuthRule } = server.$hitchy.hitchy.runtime.models;
+				const authRule = new AuthRule();
+				authRule.authUUID = UUID;
+				authRule.positive = true;
+				authRule.role = `model.read`;
+				return authRule.save()
+					.then( () => AuthRule.list() )
+					.then( items => items.length.should.eql( 1 ) );
+			} );
+		} );
+		describe( "without exisiting spec", () => {
+			it( `adding AuthRule`, () => {
+				const { AuthRule, AuthSpec } = server.$hitchy.hitchy.runtime.models;
+				const authRule = new AuthRule();
+				authRule.spec = "model.read";
+				authRule.positive = true;
+				authRule.role = `model.read`;
+				return authRule.save()
+					.then( () => Promise.all( [ AuthSpec.list(), AuthRule.list() ] ) )
+					.then( ( [ specs, rules ] ) => {
+						specs.length.should.eql( 1 );
+						rules.length.should.eql( 2 );
+					} );
+
+			} );
+		} );
 	} );
 
-	after( "stopping hitchy", () => {
-		return server ? HitchyDev.stop( server ) : undefined;
-	} );
+	describe( "authorization", () => {
+		before( "starting hitchy", () => {
+			return HitchyDev.start( { pluginsFolder: Path.resolve( __dirname, "../../.." ),
+				testProjectFolder: Path.resolve( __dirname, "../../project/basic" ),
+				options: {
+					// debug: true,
+				}, } )
+				.then( s => {
+					server = s;
+				} );
+		} );
 
-	describe( "Authz", () => {
+		after( "stopping hitchy", () => {
+			return server ? HitchyDev.stop( server ) : undefined;
+		} );
 		let authUUID;
-		it( "preparing Auth", () => {
+		let numRulesAndSpecs = 0;
+		for ( const ruleType of [ true, false ] ) {
+			describe( `${ruleType ? "positive" : "negative"} Rule`, () => {
+				for ( const propagates of [ undefined, true, false ] ) {
+					describe( `with ${propagates == null ? "default behaviour" : propagates ? "propagation enabled" : "propagation disabled"}`, () => {
+						it( `adding AuthSpec`, () => {
+							const { AuthSpec } = server.$hitchy.hitchy.runtime.models;
+							const authSpec = new AuthSpec();
+							authSpec.spec = `${ruleType ? "positive" : "negative"}.${propagates}`;
+							return authSpec.save().then( ( { uuid } ) => {
+								authUUID = uuid;
+								return AuthSpec.list().then( items => {
+									items.length.should.eql( ++numRulesAndSpecs );
+								} );
+							} );
+						} );
 
-			const { Auth } = server.$hitchy.hitchy.runtime.models;
-			const auth = new Auth();
-			auth.spec = "user.read";
-			return auth.save().then( ( { uuid } ) => {
-				console.log( uuid );
-				authUUID = uuid;
-				return Auth.list().then( items => {
-					items.length.should.eql( 1 );
-				} );
+						it( `adding AuthRule`, () => {
+							const { AuthRule } = server.$hitchy.hitchy.runtime.models;
+							const authRule = new AuthRule();
+							authRule.authUUID = authUUID;
+							authRule.positive = ruleType;
+							authRule.propagates = propagates;
+							authRule.role = `${ruleType ? "positive" : "negative"}.${propagates}`;
+							return authRule.save().then( () => {
+								return AuthRule.list().then( items => {
+									items.length.should.eql( numRulesAndSpecs );
+								} );
+							} );
+						} );
+
+						describe( `authorizes a user with role: ${ruleType ? "positive" : "negative"}.${propagates}`, () => {
+							it( `${propagates && !ruleType ? "denies" : "allows"} acces to ${ruleType ? "positive" : "negative"}`, () => {
+								const library = server.$hitchy.hitchy.runtime.services.AuthLibrary;
+								const rule = ruleType ? "positive" : "negative";
+								library.authorize( { roles: [`${rule}.${propagates}`] }, `${rule}` )
+									.should.be.eql( !( propagates && !ruleType ) );
+							} );
+
+							it( `${ruleType ? "allows" : "denies"} acces to ${ruleType ? "positive" : "negative"}.${propagates}`, () => {
+								const library = server.$hitchy.hitchy.runtime.services.AuthLibrary;
+								const rule = ruleType ? "positive" : "negative";
+								library.authorize( { roles: [`${rule}.${propagates}`] }, `${rule}.${propagates}` )
+									.should.be.eql( ruleType );
+							} );
+
+						} );
+					} );
+				}
 			} );
-		} );
-
-		it( "adding Authz", () => {
-			const { Authz } = server.$hitchy.hitchy.runtime.models;
-			const authz = new Authz();
-			authz.authUUID = authUUID;
-			authz.positive = false;
-			authz.role = "user";
-			return authz.save().then( () => {
-				return Authz.list().then( items => {
-					items.length.should.eql( 1 );
-				} );
-			} );
-		} );
-
-		it( "has registered authz in library", () => {
-			const library = server.$hitchy.hitchy.runtime.services.AuthLibrary;
-			library.listAuthz( "user" ).role.neg[0].should.be.eql( "user" );
-			library.listAuthz( "user.read" ).role.neg[0].should.be.eql( "user" );
-		} );
-
-		it( "does authorization correct", () => {
-			const library = server.$hitchy.hitchy.runtime.services.AuthLibrary;
-			library.authorize( { roles: ["user"] }, "user.read" ).should.be.false();
-		} );
+		}
 	} );
 } );

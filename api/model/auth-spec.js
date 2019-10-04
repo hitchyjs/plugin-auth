@@ -33,7 +33,7 @@ module.exports = function( options ) {
 	return {
 		props: {
 			spec: {
-				type: "string"
+				type: "string",
 			}
 		}
 	};

@@ -27,33 +27,64 @@
  */
 "use strict";
 
-module.exports = function( options ) {
+module.exports = function() {
 	const api = this;
 	const { services, models } = api.runtime;
 
 	return {
 		props: {
-			authUUID: { type: "uuid", required: true },
+			authUUID: { type: "uuid" },
+			spec: { type: "string" },
 			role: { type: "string" },
 			userUUID: { type: "uuid" },
 			positive: { type: "boolean" }
 		},
 		hooks: {
 			afterValidate( errors ) {
+				const auth = new models.AuthSpec( this.authUUID );
 				return Promise.all( [
-					new models.Auth( this.authUUID ).$exists,
+					auth.$exists,
 					this.userUUID ? new models.User( this.userUUID ).$exists : undefined,
 				] ).then( ( [ exists, userExists ] ) => {
-					if ( !exists ) errors.push( new TypeError( "unknown authUUID" ) );
+					const promises = [];
+					if ( !exists ) {
+						if ( this.spec ) {
+							const { AuthSpec } = api.runtime.models;
+							promises.push(
+								AuthSpec.find( { eq: { name: "spec", value: this.spec } } )
+									.then( ( [entry] ) => {
+										if ( entry ) {
+											this.authUUID = entry.uuid;
+											return undefined;
+										}
+										const authSpec = new AuthSpec();
+										authSpec.spec = this.spec;
+										return authSpec.save();
+									} ) );
+						} else {
+							errors.push( new TypeError( "unknown authUUID and no spec, please supply spec or matching authUUID" ) );
+						}
+					} else if ( this.spec != null ) {
+						promises.push( auth.load()
+							.then( entry => {
+								if ( entry.spec !== this.spec ) {
+									errors.push( new Error( "AuthUUID does not match the provided spec" ) );
+								}
+							} )
+						);
+					}
 					if ( userExists != null && !userExists ) errors.push( new TypeError( "unknown userUUID" ) );
-					return errors;
+					return Promise.all( promises ).then( () => errors );
 				} );
 			},
-			afterSave() {
-				services.AuthLibrary.addAuthz( this );
+			afterSave( existsAlready ) {
+				if ( existsAlready ) {
+					console.log( this );
+				}
+				services.AuthLibrary.addAuthRule( this );
 			},
 			afterRemove() {
-				services.AuthLibrary.removeAuthz( this );
+				services.AuthLibrary.removeAuthRule( this );
 			}
 		}
 

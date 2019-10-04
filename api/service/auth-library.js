@@ -34,8 +34,9 @@ module.exports = function( options, pluginHandles, myHandle ) {
 	const { models } = api.runtime;
 
 	return {
-		addAuthz( { authUUID, role, userUUID, positive } ) {
-			return new models.Auth( authUUID ).load()
+		addAuthRule( { authUUID, role, userUUID, positive, propagates } ) {
+			const updateNodesOnPath = propagates == null ? Boolean( positive ) : propagates;
+			return new models.AuthSpec( authUUID ).load()
 				.then( ( { spec } ) => {
 					const list = positive ? "pos" : "neg";
 
@@ -70,7 +71,9 @@ module.exports = function( options, pluginHandles, myHandle ) {
 
 					if ( spec ) {
 						const parts = spec.split( "." );
-						for ( const part of parts ) {
+						const numParts = parts.length;
+						for ( let index = 0; index < numParts; index++ ) {
+							const part = parts[index];
 							if ( !pointer.children ) {
 								pointer.children = {};
 							}
@@ -79,15 +82,16 @@ module.exports = function( options, pluginHandles, myHandle ) {
 							}
 							pointer = pointer.children[part];
 
-							fillValues( pointer );
+							if ( updateNodesOnPath || index === numParts - 1 ) fillValues( pointer );
 						}
 					} else {
 						fillValues( pointer );
 					}
 				} );
 		},
-		removeAuthz( { authUUID, role, userUUID, positive } ) {
-			return new models.Auth( authUUID ).load()
+		removeAuthRule( { authUUID, role, userUUID, positive, propagates } ) {
+			const updateNodesOnPath = propagates == null ? Boolean( positive ) : propagates;
+			return new models.AuthSpec( authUUID ).load()
 				.then( entry => entry.spec )
 				.then( spec => {
 					let pointer = cache;
@@ -118,7 +122,9 @@ module.exports = function( options, pluginHandles, myHandle ) {
 
 					if ( spec ) {
 						const parts = spec.split( "." );
-						for ( const part of parts ) {
+						const numParts = parts.length;
+						for ( let index = 0; index < numParts; index++ ) {
+							const part = parts[index];
 							if ( !pointer.children ) {
 								pointer.children = {};
 							}
@@ -127,14 +133,14 @@ module.exports = function( options, pluginHandles, myHandle ) {
 							}
 							pointer = pointer.children[part];
 
-							removeValues( pointer );
+							if ( updateNodesOnPath || index === numParts - 1 ) removeValues( pointer );
 						}
 					} else {
 						removeValues( pointer );
 					}
 				} );
 		},
-		listAuthz( authSpec ) {
+		listAuthRules( authSpec ) {
 			let pointer = cache;
 
 			if ( authSpec ) {
@@ -144,7 +150,7 @@ module.exports = function( options, pluginHandles, myHandle ) {
 				}
 			}
 
-			return pointer.values || [];
+			return pointer.values || {};
 		},
 		authorize( { uuid, roles }, authSpec ) {
 			let pointer = cache;
