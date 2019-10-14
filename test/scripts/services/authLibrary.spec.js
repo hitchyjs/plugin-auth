@@ -175,6 +175,70 @@ describe( "AuthRuleLibrary", () => {
 			} );
 		} );
 
+		describe( `changing an AuthRule`, () => {
+			it( "with new spec", () => {
+				const { AuthRule, AuthSpec } = server.$hitchy.hitchy.runtime.models;
+				return AuthRule.list()
+					.then( entries => entries[0] )
+					.then( entry => {
+						const authRule = new AuthRule( entry.uuid );
+						return authRule.load();
+					} ).then( authRule => {
+						const { authSpecUUID } = authRule;
+						const authSpec = new AuthSpec( authSpecUUID );
+						return authSpec.load()
+							.then( ( { spec } ) => {
+								const AuthLibrary = server.$hitchy.hitchy.runtime.services.AuthLibrary;
+								const length = AuthLibrary.listAuthRules( false ).length;
+								authRule.spec = "model.move";
+								authRule.authSpecUUID = "";
+								return AuthSpec.list()
+									.then( oldList => {
+										const numSpec = oldList.length;
+										return authRule.save()
+											.then( () => {
+												AuthLibrary.listAuthRules( false ).length.should.be.eql( length + 1 );
+												AuthLibrary.getNodePath( spec ).should.have.length( 2 );
+												return AuthSpec.list( list => list.length.should.be.eql( numSpec + 1 ) );
+											} );
+									} );
+
+							} );
+					} );
+			} );
+
+			it( "with now unused spec", () => {
+				const { AuthRule, AuthSpec } = server.$hitchy.hitchy.runtime.models;
+				return AuthRule.list()
+					.then( entries => entries[0] )
+					.then( entry => {
+						const authRule = new AuthRule( entry.uuid );
+						return authRule.load();
+					} ).then( authRule => {
+						const { authSpecUUID } = authRule;
+						const authSpec = new AuthSpec( authSpecUUID );
+						return authSpec.load()
+							.then( ( { spec } ) => {
+								const AuthLibrary = server.$hitchy.hitchy.runtime.services.AuthLibrary;
+								const length = AuthLibrary.listAuthRules( false ).length;
+								authRule.spec = "model.edit";
+								authRule.authSpecUUID = "";
+								return AuthSpec.list()
+									.then( oldList => {
+										const numSpec = oldList.length;
+										return authRule.save()
+											.then( () => {
+												AuthLibrary.listAuthRules( false ).length.should.be.eql( length );
+												AuthLibrary.getNodePath( spec ).should.have.length( 2 );
+												return AuthSpec.list( list => list.length.should.be.eql( numSpec - 1 ) );
+											} );
+									} );
+
+							} );
+					} );
+			} );
+		} );
+
 		describe( "loading AuthRules", () => {
 			it( "loads AuthRules from fileAdapter on StartUp", () => {
 				if ( server ) HitchyDev.stop( server );
@@ -216,7 +280,7 @@ describe( "AuthRuleLibrary", () => {
 		let numRulesAndSpecs = 0;
 		for ( const ruleType of [ true, false ] ) {
 			describe( `${ruleType ? "positive" : "negative"} Rule`, () => {
-				it( `assing AuthSpec with spec ${ruleType ? "positive" : "negative"}.user`, () => {
+				it( `adding AuthSpec with spec ${ruleType ? "positive" : "negative"}.user`, () => {
 					const { AuthSpec } = server.$hitchy.hitchy.runtime.models;
 					const authSpec = new AuthSpec();
 					authSpec.spec = `${ruleType ? "positive" : "negative"}.user`;
@@ -228,7 +292,7 @@ describe( "AuthRuleLibrary", () => {
 					} );
 				} );
 
-				it( `adding AuthRule`, () => {
+				it( `adding an AuthRule`, () => {
 					const { AuthRule } = server.$hitchy.hitchy.runtime.models;
 					const authRule = new AuthRule();
 					authRule.authSpecUUID = authUUID;

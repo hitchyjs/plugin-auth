@@ -71,7 +71,7 @@ module.exports = function() {
 						promises.push( auth.load()
 							.then( entry => {
 								if ( entry.spec !== this.spec ) {
-									errors.push( new Error( "AuthUUID does not match the provided spec" ) );
+									errors.push( new Error( "authSpecUUID does not match the provided spec" ) );
 								}
 							} )
 						);
@@ -81,10 +81,35 @@ module.exports = function() {
 				} );
 			},
 			afterSave( existsAlready ) {
-				if ( existsAlready ) {
-					services.AuthLibrary.removeAuthRule( this.$properties.$context.changed.get() );
+				const monitorContext = this.$properties.$context;
+				const promises = [];
+				if ( existsAlready && monitorContext.hasChanged ) {
+					const { changed } = monitorContext;
+					const authSpecUUIDChanged = changed.has( "authSpecUUID" );
+					promises.push( services.AuthLibrary.removeAuthRule( {
+						authSpecUUID: authSpecUUIDChanged ? changed.get( "authSpecUUID" ) : this.authSpecUUID,
+						role: changed.has( "role" ) ? changed.get( "role" ) : this.role,
+						userUUID: changed.has( "userUUID" ) ? changed.get( "userUUID" ) : this.userUUID,
+						positive: changed.has( "positive" ) ? changed.get( "positive" ) : this.positive
+					} ) );
+					if ( authSpecUUIDChanged ) {
+						const { AuthRule } = api.runtime.models;
+						const uuid = changed.get( "authSpecUUID" );
+						promises.push(
+							AuthRule.find( { eq: { name: "authSpecUUID", value: uuid } } )
+								.then( list => {
+									if ( !list.length ) {
+										const { AuthSpec } = api.runtime.models;
+										const authSpec = new AuthSpec( uuid );
+										return authSpec.remove();
+									}
+									return undefined;
+								} )
+						);
+					}
 				}
-				return services.AuthLibrary.addAuthRule( this );
+				return Promise.all( promises )
+					.then( () => services.AuthLibrary.addAuthRule( this ) );
 			},
 			afterRemove() {
 				return services.AuthLibrary.removeAuthRule( this );
