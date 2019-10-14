@@ -33,7 +33,7 @@ module.exports = function() {
 
 	return {
 		props: {
-			authUUID: { type: "uuid" },
+			authSpecUUID: { type: "uuid" },
 			spec: { type: "string" },
 			role: { type: "string" },
 			userUUID: { type: "uuid" },
@@ -41,7 +41,7 @@ module.exports = function() {
 		},
 		hooks: {
 			afterValidate( errors ) {
-				const auth = new models.AuthSpec( this.authUUID );
+				const auth = new models.AuthSpec( this.authSpecUUID );
 				return Promise.all( [
 					auth.$exists,
 					this.userUUID ? new models.User( this.userUUID ).$exists : undefined,
@@ -54,15 +54,18 @@ module.exports = function() {
 								AuthSpec.find( { eq: { name: "spec", value: this.spec } } )
 									.then( ( [entry] ) => {
 										if ( entry ) {
-											this.authUUID = entry.uuid;
+											this.authSpecUUID = entry.uuid;
 											return undefined;
 										}
 										const authSpec = new AuthSpec();
 										authSpec.spec = this.spec;
-										return authSpec.save();
+										return authSpec.save()
+											.then( res => {
+												this.authSpecUUID = res.uuid;
+											} );
 									} ) );
 						} else {
-							errors.push( new TypeError( "unknown authUUID and no spec, please supply spec or matching authUUID" ) );
+							errors.push( new TypeError( "unknown authSpecUUID and no spec, please supply spec or matching authSpecUUID" ) );
 						}
 					} else if ( this.spec != null ) {
 						promises.push( auth.load()
@@ -79,12 +82,12 @@ module.exports = function() {
 			},
 			afterSave( existsAlready ) {
 				if ( existsAlready ) {
-					console.log( this );
+					services.AuthLibrary.removeAuthRule( this.$properties.$context.changed.get() );
 				}
-				services.AuthLibrary.addAuthRule( this );
+				return services.AuthLibrary.addAuthRule( this );
 			},
 			afterRemove() {
-				services.AuthLibrary.removeAuthRule( this );
+				return services.AuthLibrary.removeAuthRule( this );
 			}
 		}
 

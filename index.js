@@ -37,7 +37,7 @@ module.exports = function( options, plugins ) {
 
 	const myApi = {
 		initialize() {
-			const { models: { User, AuthRule }, services: { AuthStrategies } } = api.runtime;
+			const { models: { User, AuthRule, AuthSpec }, services: { AuthStrategies } } = api.runtime;
 			const config = api.config.auth || {};
 			const declaredStrategies = config.strategies || {};
 			const declaredStrategyNames = Object.keys( declaredStrategies );
@@ -68,23 +68,41 @@ module.exports = function( options, plugins ) {
 				Passport.use( AuthStrategies.generateLocal() );
 			}
 
-			User.find( { eq: { name: "role", value: "admin" }, } )
-				.then( matches => {
-					if ( matches && matches.length > 0 ) {
-						return matches;
-					}
+			const promises = [];
 
-					DebugLog( "creating admin user" );
+			promises.push(
+				User.find( { eq: { name: "role", value: "admin" }, } )
+					.then( matches => {
+						if ( matches && matches.length > 0 ) {
+							return matches;
+						}
 
-					const user = new User();
+						DebugLog( "creating admin user" );
 
-					user.name = "admin";
-					user.role = "admin";
+						const user = new User();
 
-					return user.setPassword( "nimda" )
-						.then( () => user.save() );
-				} )
-				.catch( AlertLog );
+						user.name = "admin";
+						user.role = "admin";
+
+						return user.setPassword( "nimda" )
+							.then( () => user.save() );
+					} )
+					.catch( AlertLog )
+			);
+
+			promises.push(
+				AuthRule.list( { loadProperties: true } )
+					.then( entries => {
+						DebugLog( `loading ${entries.length} authSpec${entries.length === 1 ? "" : "s"} into the AuthLibrary` );
+						for ( const entry of entries ) {
+							api.runtime.services.AuthLibrary.addAuthRule( entry );
+						}
+						DebugLog( `finished tree for AuthRuleLibrary:` );
+						api.runtime.services.AuthLibrary.logAuthTree();
+					} )
+			);
+
+			return Promise.all( promises );
 		},
 
 		policies: {
