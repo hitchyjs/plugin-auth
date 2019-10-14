@@ -34,30 +34,34 @@ module.exports = function() {
 	const api = this;
 
 	return {
-		generateLocal: () => Object.assign( new LocalStrategy( ( name, password, done ) => {
-			api.runtime.models.User
-				.find( { eq: { name: "name", value: name } }, {} ,{ loadRecords: true } )
-				.then( matches => {
-					switch ( matches.length ) {
-						case 0 :
-							return done( null, false, { message: "Incorrect username." } );
+		generateLocal: () => {
+			const strategy = new LocalStrategy( ( name, password, done ) => {
+				api.runtime.models.User
+					.find( { eq: { name: "name", value: name } }, {} ,{ loadRecords: true } )
+					.then( matches => {
+						switch ( matches.length ) {
+							case 0 :
+								return done( null, false, { message: "Incorrect username." } );
 
-						case 1 : {
-							const user = matches[0];
+							case 1 : {
+								const user = matches[0];
 
-							if ( user.verifyPassword( password ) ) {
-								return done( null, user );
+								if ( user.verifyPassword( password ) ) {
+									return done( null, user );
+								}
+
+								return done( null, false, { message: "Incorrect password." } );
 							}
 
-							return done( null, false, { message: "Incorrect password." } );
+							default :
+								return done( null, false, { message: "Ambiguous username." } );
 						}
-
-						default :
-							return done( null, false, { message: "Ambiguous username." } );
-					}
-				} )
-				.catch( done );
-		} ),{ passwordRequried: true } ),
+					} )
+					.catch( done );
+			} );
+			strategy.passwordRequried = true;
+			return strategy;
+		},
 		defaultStrategy: () => {
 			const { defaultStrategy, strategies } = api.config.auth;
 			if ( defaultStrategy ) {

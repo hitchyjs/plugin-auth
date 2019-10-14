@@ -36,6 +36,7 @@ const HitchyDev = require( "hitchy-server-dev-tools" );
 const freshUUID = () => require( "crypto" ).randomBytes( 16 ).toString( "hex" ).toLowerCase().replace( /^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5" );
 
 
+
 require( "should-http" );
 
 describe( "AuthRuleLibrary", () => {
@@ -46,7 +47,7 @@ describe( "AuthRuleLibrary", () => {
 			return HitchyDev.start( { pluginsFolder: Path.resolve( __dirname, "../../.." ),
 				testProjectFolder: Path.resolve( __dirname, "../../project/basic" ),
 				options: {
-					debug: true,
+					// debug: true,
 				}, } )
 				.then( s => {
 					server = s;
@@ -180,7 +181,7 @@ describe( "AuthRuleLibrary", () => {
 				return HitchyDev.start( { pluginsFolder: Path.resolve( __dirname, "../../.." ),
 					testProjectFolder: Path.resolve( __dirname, "../../project/basic" ),
 					options: {
-						debug: true,
+						// debug: true,
 					}, } )
 					.then( s => {
 						server = s;

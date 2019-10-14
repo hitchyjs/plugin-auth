@@ -30,95 +30,101 @@
 
 const Passport = require( "passport" );
 
-exports.initialize = ( req, res, next ) => {
-	Passport.initialize()( req, res, initializeError => {
-		if ( initializeError ) {
-			next( initializeError );
-		} else {
-			Passport.session()( req, res, sessionError => {
-				if ( req.session.user ) {
-					const { name, roles } = req.session.user;
+module.exports = function() {
+	const api = this;
+	const AlertLog = api.log( "hitchy:plugin:auth:alert" );
 
-					res.set( "X-Authenticated-As", name );
-					res.set( "X-Authorized-As", roles.join( "," ) );
+	return {
+		initialize: ( req, res, next ) => {
+			Passport.initialize()( req, res, initializeError => {
+				if ( initializeError ) {
+					next( initializeError );
+				} else {
+					Passport.session()( req, res, sessionError => {
+						if ( req.session.user ) {
+							const { name, roles } = req.session.user;
+
+							res.set( "X-Authenticated-As", name );
+							res.set( "X-Authorized-As", roles.join( "," ) );
+						}
+						next( sessionError );
+					} );
 				}
-				next( sessionError );
 			} );
-		}
-	} );
-};
+		},
+		authenticate: ( req, res, next ) => {
+			const { strategy } = req.params;
+			const { services } = req.hitchy.runtime;
+			const defaultStrategy = services.AuthStrategies.defaultStrategy();
 
-exports.authenticate = ( req, res, next ) => {
-	const { strategy } = req.params;
-	const { services } = req.hitchy.runtime;
-	const defaultStrategy = services.AuthStrategies.defaultStrategy();
+			req.fetchBody().then( body => {
+				req.body = body;
+				Passport.authenticate( strategy || defaultStrategy )( req, res, err => {
+					if ( req.user ) {
+						const { uuid, name, roles } = req.user;
 
-	req.fetchBody().then( body => {
-		req.body = body;
-		Passport.authenticate( strategy || defaultStrategy )( req, res, err => {
-			if ( req.user ) {
-				const { uuid, name, roles } = req.user;
-
-				req.session.user = { uuid, name, roles };
-				res.set( "X-Authenticated-As", name );
-				res.set( "X-Authorized-As", roles.join( "," ) );
-			} else {
-				console.log( "session.drop" );
-				req.session.drop();
+						req.session.user = { uuid, name, roles };
+						res.set( "X-Authenticated-As", name );
+						res.set( "X-Authorized-As", roles.join( "," ) );
+					} else {
+						req.session.drop();
+					}
+					if ( err ) AlertLog( err );
+					next( err );
+				} );
+			} ).catch( err => {
+				AlertLog( err );
+				next( err );
+			} );
+		},
+		dropAuth: ( req, res, next ) => {
+			if ( req.session && req.session.user ) {
+				try {
+					req.session.drop();
+					req.logout();
+					res.set( "X-Authenticated-As", undefined );
+					res.set( "X-Authorized-As", undefined );
+				} catch ( e ) {
+					next( e );
+				}
 			}
-			next( err );
-		} );
-	} ).catch( next );
-};
+			next();
+		},
+		requireAuthentication: ( req, res, next ) => {
+			if ( req.user ) {
+				next();
+			} else {
+				res
+					.status( 403 )
+					.json( {
+						error: "access forbidden",
+					} );
+			}
+		},
+		requireAuthorization: ( req, res, next ) => {
+			const { url } = req;
 
-exports.dropAuth = ( req, res, next ) => {
-	if ( req.session && req.session.user ) {
-		try {
-			req.session.drop();
-			req.logout();
-			res.set( "X-Authenticated-As", undefined );
-			res.set( "X-Authorized-As", undefined );
-		} catch ( e ) {
-			next( e );
+			if ( req.user ) {
+				next();
+			} else {
+				res
+					.status( 403 )
+					.json( {
+						error: "access forbidden",
+					} );
+			}
+		},
+		requireAdmin: ( req, res, next ) => {
+			if ( !req.user || req.user.roles.indexOf( "admin" ) < 0 ) {
+				res
+					.status( 403 )
+					.json( {
+						error: "access forbidden",
+					} );
+			} else {
+				next();
+			}
 		}
-	}
-	next();
+	};
 };
 
-exports.requireAuthentication = ( req, res, next ) => {
-	if ( req.user ) {
-		next();
-	} else {
-		res
-			.status( 403 )
-			.json( {
-				error: "access forbidden",
-			} );
-	}
-};
-
-exports.requireAuthorization = ( req, res, next ) => {
-	const { url } = req;
-
-	if ( req.user ) {
-		next();
-	} else {
-		res
-			.status( 403 )
-			.json( {
-				error: "access forbidden",
-			} );
-	}
-};
-
-exports.requireAdmin = ( req, res, next ) => {
-	if ( !req.user || req.user.roles.indexOf( "admin" ) < 0 ) {
-		res
-			.status( 403 )
-			.json( {
-				error: "access forbidden",
-			} );
-	} else {
-		next();
-	}
-};
