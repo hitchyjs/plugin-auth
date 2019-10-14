@@ -31,7 +31,7 @@ npm install hitchy hitchy-plugin-auth
 ```
 
 :::tip
-Installing [hitchy-plugin-auth](https://www.npmjs.com/package/hitchy-auth) is implicitly fetching [hitchy-plugin-odem](https://www.npmjs.com/package/hitchy-plugin-odem) as a dependency. That's why you don't need to install it explicitly here while instantly benefitting from a REST API for accessing your data. 
+Installing [hitchy-plugin-auth](https://www.npmjs.com/package/hitchy-plugin-auth) is implicitly fetching [hitchy-plugin-odem](https://www.npmjs.com/package/hitchy-plugin-odem) as a dependency. That's why you don't need to install it explicitly here while instantly benefitting from a REST API for accessing your data. 
 :::
 
 ## Start Hitchy

@@ -34,7 +34,7 @@ module.exports = function() {
 	const api = this;
 
 	return {
-		generateLocal: () => Object.assign( { passwordRequried: true }, new LocalStrategy( ( name, password, done ) => {
+		generateLocal: () => Object.assign( new LocalStrategy( ( name, password, done ) => {
 			api.runtime.models.User
 				.find( { eq: { name: "name", value: name } }, {} ,{ loadRecords: true } )
 				.then( matches => {
@@ -57,7 +57,7 @@ module.exports = function() {
 					}
 				} )
 				.catch( done );
-		} ) ),
+		} ),{ passwordRequried: true } ),
 		defaultStrategy: () => {
 			const { defaultStrategy, strategies } = api.config.auth;
 			if ( defaultStrategy ) {
