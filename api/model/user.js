@@ -38,7 +38,9 @@ module.exports = function( options ) {
 			name: {
 				required: true,
 			},
-			password: {},
+			password: {
+				type: "string"
+			},
 			role: {
 				required: true,
 			},
@@ -63,6 +65,14 @@ module.exports = function( options ) {
 					}
 				}
 				return errors;
+			},
+			beforeSave( existsAlready, record ) {
+				if ( record.password )
+					return this.hashPassword( record.password ).then( hashedPassword => {
+						record.password = hashedPassword;
+						return record;
+					} );
+				return Promise.resolve( record );
 			}
 		},
 		computed: {
@@ -83,12 +93,18 @@ module.exports = function( options ) {
 					return Promise.reject( new TypeError( "missing cleartext password to be hashed" ) );
 				}
 
+				if ( cleartext.length === 120 &&
+					/^[a-z0-9+/]{119}=$/i.test( cleartext ) &&
+					Buffer.from( cleartext, "base64" ).slice( 0,9 ).toString() === "{SSHA512}" ) {
+					return Promise.resolve( cleartext );
+				}
+
 				const hash = crypto.createHash( "sha512" );
 				let promise;
 
-				const _extracted = salt == null ? null : ( Buffer.isBuffer( salt ) ? salt : Buffer.from( salt, "base64" ) ).slice( 64 );
+				const _extracted = salt == null ? null : ( Buffer.isBuffer( salt ) ? salt : Buffer.from( salt, "base64" ) ).slice( 73 );
 
-				if ( _extracted && _extracted.length > 0 ) {
+				if ( _extracted && _extracted.length >= 16 ) {
 					promise = Promise.resolve( _extracted );
 				} else {
 					promise = new Promise( ( resolve, reject ) => crypto.randomBytes( 16, ( error, buffer ) => {
@@ -107,7 +123,7 @@ module.exports = function( options ) {
 						hash.update( Buffer.isBuffer( cleartext ) ? cleartext : Buffer.from( String( cleartext ), "utf8" ) );
 						hash.update( _salt );
 
-						return Buffer.concat( [ hash.digest(), _salt ] ).toString( "base64" );
+						return Buffer.concat( [ Buffer.from( "{SSHA512}" ), hash.digest(), _salt ] ).toString( "base64" );
 					} );
 			},
 
