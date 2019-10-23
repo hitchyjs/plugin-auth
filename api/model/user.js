@@ -39,7 +39,7 @@ module.exports = function() {
 				required: true,
 			},
 			password: {
-				type: "string"
+				type: "string",
 			},
 			role: {
 				required: true,
@@ -145,7 +145,9 @@ module.exports = function() {
 			 * @return {Promise<boolean>} promises true if hashed password matches else false
 			 */
 			verifyPassword( password ) {
-				return this.hashPassword( password, this.password ).then( hashedPassword => this.password === hashedPassword );
+				return this.hashPassword( password, this.password ).then( hashedPassword => {
+					return this.password === hashedPassword;
+				} );
 			}
 		},
 	};

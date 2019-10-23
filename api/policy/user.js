@@ -65,7 +65,6 @@ module.exports = function() {
 				}
 			} )
 				.then( ( { old1, old2, newPw } ) => {
-					console.log( { old1, old2, newPw } );
 					if ( !old1 ) {
 						res
 							.status( 403 )
@@ -116,9 +115,7 @@ module.exports = function() {
 							}
 
 							return user.setPassword( newPw )
-								.then( hashedPW => {
-									console.log( "new", hashedPW );
-									console.log( "old", oldPassword );
+								.then( () => {
 									user.save();
 								} );
 						} );

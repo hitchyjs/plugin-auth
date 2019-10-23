@@ -49,11 +49,13 @@ module.exports = function() {
 							case 1 : {
 								const [user] = matches;
 								DebugLog( `authStrategy: authenticated as: name: ${user.name}, role: ${user.role}, uuid: ${user.uuid}` );
-								if ( user.verifyPassword( password ) ) {
-									return done( null, user );
-								}
+								return user.verifyPassword( password ).then( result => {
+									if ( result ) {
+										return done( null, user );
+									}
 
-								return done( null, false, { message: "Incorrect password." } );
+									return done( null, false, { message: "Incorrect password." } );
+								} );
 							}
 
 							default :
