@@ -50,11 +50,8 @@ The endpoint `/api/auth/login` is always checking whether there is at least one 
 
 ### Medium Priority
 
-* Add support for multiple roles per user.
-
-### Last But Not Least
-
 * Improve authorization system by adding additional level of customizable access control.
+
 
 ## Note
 

@@ -48,32 +48,80 @@ module.exports = function() {
 			next( err );
 		},
 		changePassword: ( req, res, next ) => {
-			const old1 = req.params.old1;
-			const old2 = req.params.old2;
-			const newPw = req.params.new;
-
-			const current = req.session.user;
-
-			if ( !current ) {
-				return next( "verification needed" );
-			}
-
-			if ( old1 !== old2 ) {
-				return next( "passwords do not match" );
-			}
-
-			const User = api.models.User;
-			const { uuid } = current;
-			const { load, setPassword, save } = new User( uuid );
-			return load()
-				.then( userRes => {
-					if ( !User.verifyPassword( old1, userRes.password ) ) {
-						return next( "wrong passwords" );
+			const current = req.user;
+			return new Promise( resolve => {
+				switch ( req.method ) {
+					case "PATCH" :
+					case "POST" : {
+						return req.fetchBody().then( body => {
+							resolve( {
+								old1: body.old,
+								old2: body.old2,
+								newPw: body.new,
+							} );
+						} );
+					}
+					default : return {};
+				}
+			} )
+				.then( ( { old1, old2, newPw } ) => {
+					console.log( { old1, old2, newPw } );
+					if ( !old1 ) {
+						res
+							.status( 403 )
+							.json( {
+								error: "access forbidden: old password missing",
+							} );
+						return next( "verification needed" );
+					}
+					if ( !newPw ) {
+						res
+							.status( 403 )
+							.json( {
+								error: "access forbidden: new password missing",
+							} );
+						return next( "verification needed" );
+					}
+					if ( !current ) {
+						res
+							.status( 403 )
+							.json( {
+								error: "access forbidden: verification needed",
+							} );
+						return next( "verification needed" );
 					}
 
-					return setPassword( newPw )
-						.then( () => save() );
+					if ( old2 && ( old1 !== old2 ) ) {
+						res
+							.status( 403 )
+							.json( {
+								error: "access forbidden: passwords do not match",
+							} );
+						return next( "passwords do not match" );
+					}
 
+					const { User } = api.runtime.models;
+					const { uuid } = current;
+					const user = new User( uuid );
+					return user.load()
+						.then( userRes => {
+							const oldPassword = userRes.password;
+							if ( !user.verifyPassword( old1, oldPassword ) ) {
+								res
+									.status( 403 )
+									.json( {
+										error: "access forbidden: wrong password",
+									} );
+								return next( "wrong password" );
+							}
+
+							return user.setPassword( newPw )
+								.then( hashedPW => {
+									console.log( "new", hashedPW );
+									console.log( "old", oldPassword );
+									user.save();
+								} );
+						} );
 				} )
 				.catch( err => {
 					AlertLog( err );

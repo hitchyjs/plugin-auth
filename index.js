@@ -134,6 +134,8 @@ module.exports = function( options, plugins ) {
 				"GET /api/auth/login": ["Auth.authenticate"],
 				"GET /api/auth/logout": ["Auth.dropAuth"],
 				"GET /api/user": "Auth.requireAdmin",
+				"POST /api/auth/password": ["user.changePassword"],
+				"PATCH /api/auth/password": ["user.changePassword"],
 			};
 
 			const odmPlugin = api.plugins["odm-provider"];
@@ -169,6 +171,8 @@ module.exports = function( options, plugins ) {
 			"GET /api/auth/login": "user.auth",
 			"GET /api/auth/current": "user.getCurrent",
 			"GET /api/auth/logout": "user.dropAuth",
+			"POST /api/auth/password": ["user.changePassword"],
+			"PATCH /api/auth/password": ["user.changePassword"],
 		},
 	};
 
