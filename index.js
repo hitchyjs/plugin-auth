@@ -49,13 +49,31 @@ module.exports = function( options, plugins ) {
 			const declaredStrategyNames = Object.keys( declaredStrategies );
 
 			Passport.serializeUser( ( user, done ) => {
-				done( null, user.uuid );
+				console.trace( "serializeUser" );
+				DebugLog( `serializeUser: { name: ${user.name}, role: ${user.role}, uuid: ${user.uuid} }` );
+				return User.list()
+					.then( entries => {
+						const admin = entries[0];
+						console.log( `user: { name: ${admin.name}, uuid: ${admin.uuid}, role: ${admin.role} }` );
+					} )
+					.then( () => done( null, user.uuid ) );
 			} );
 
 			Passport.deserializeUser( ( uuid, done ) => {
-				new User( uuid )
-					.load()
-					.then( user => done( null, user ) )
+				return User.list()
+					.then( ( [admin] ) => console.log( { name: admin.name, role: admin.role, uuid: admin.uuid }, uuid ) )
+					.then( () => {
+						const user = new User( uuid );
+						return user.$exists
+							.then( exists => {
+								if ( exists ) return user.load();
+								throw new Error( "user uuid does not exist" );
+							} );
+					} )
+					.then( user => {
+						DebugLog( `deserializeUser: name: ${user.name}, role: ${user.role}, uuid: ${user.uuid}` );
+						done( null, user );
+					} )
 					.catch( done );
 			} );
 
@@ -80,6 +98,7 @@ module.exports = function( options, plugins ) {
 				User.find( { eq: { name: "role", value: "admin" }, } )
 					.then( matches => {
 						if ( matches && matches.length > 0 ) {
+							DebugLog( "admin user found" );
 							return matches;
 						}
 
@@ -91,9 +110,13 @@ module.exports = function( options, plugins ) {
 						user.role = "admin";
 
 						return user.setPassword( "nimda" )
-							.then( () => user.save() );
+							.then( () => user.save() )
+							.then( () => User.list().then( ( [admin] ) => DebugLog( "created admin with uuid: " + admin.uuid ) ) );
 					} )
-					.catch( AlertLog )
+					.catch( err => {
+						console.error( err );
+						AlertLog( err );
+					} )
 			);
 
 			promises.push(

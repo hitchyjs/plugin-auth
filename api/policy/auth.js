@@ -33,6 +33,7 @@ const Passport = require( "passport" );
 module.exports = function() {
 	const api = this;
 	const AlertLog = api.log( "hitchy:plugin:auth:alert" );
+	const DebugLog = api.log( "hitchy:plugin:auth:debug" );
 
 	return {
 		initialize: ( req, res, next ) => {
@@ -62,6 +63,7 @@ module.exports = function() {
 				Passport.authenticate( strategy || defaultStrategy )( req, res, err => {
 					if ( req.user ) {
 						const { uuid, name, roles } = req.user;
+						DebugLog( "authenticating: ", { uuid, name, roles, session: req.session.user } );
 
 						req.session.user = { uuid, name, roles };
 						res.set( "X-Authenticated-As", name );

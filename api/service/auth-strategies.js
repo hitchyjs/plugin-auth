@@ -33,6 +33,9 @@ const LocalStrategy = require( "passport-local" ).Strategy;
 module.exports = function() {
 	const api = this;
 
+	const AlertLog = api.log( "hitchy:plugin:auth:alert" );
+	const DebugLog = api.log( "hitchy:plugin:auth:debug" );
+
 	return {
 		generateLocal: () => {
 			const strategy = new LocalStrategy( ( name, password, done ) => {
@@ -44,8 +47,9 @@ module.exports = function() {
 								return done( null, false, { message: "Incorrect username." } );
 
 							case 1 : {
-								const user = matches[0];
-
+								const [user] = matches;
+								DebugLog( `authStrategy: authenticated as: name: ${user.name}, role: ${user.role}, uuid: ${user.uuid}` );
+								console.log( `authStrategy: user: { name: ${user.name}, uuid: ${user.uuid}, role: ${user.role} }` );
 								if ( user.verifyPassword( password ) ) {
 									return done( null, user );
 								}
@@ -57,7 +61,10 @@ module.exports = function() {
 								return done( null, false, { message: "Ambiguous username." } );
 						}
 					} )
-					.catch( done );
+					.catch( err => {
+						AlertLog( err );
+						done( err );
+					} );
 			} );
 			strategy.passwordRequried = true;
 			return strategy;

@@ -35,6 +35,7 @@ const HitchyDev = require( "hitchy-server-dev-tools" );
 require( "should" );
 require( "should-http" );
 
+
 /**
  * Extracts session ID proposed in provided set of response headers.
  *
@@ -56,7 +57,6 @@ function getSID( headers ) {
 
 	return found;
 }
-
 
 describe( "Hitchy instance with plugin for server-side user authentication and authorization", () => {
 	let server = null;
@@ -229,3 +229,130 @@ describe( "Hitchy instance with plugin for server-side user authentication and a
 			} );
 	} );
 } );
+
+describe("Hitchy authorization", () => {
+	let server = null;
+	let sid = null;
+
+	before( "starting hitchy", () => {
+		return HitchyDev.start( {
+			pluginsFolder: Path.resolve( __dirname, "../.." ),
+			testProjectFolder: Path.resolve( __dirname, "../project/authorization-with-filter-password" ),
+			options: {
+				debug: false,
+			},
+		} )
+			.then( s => {
+				server = s;
+			} );
+	} );
+
+	after( "stopping hitchy", () => {
+		if ( server ) {
+			return HitchyDev.stop( server );
+		}
+		return undefined;
+	} );
+
+	it( "is running", () => {
+		return HitchyDev.query.get( "/api/user" )
+			.then( res => {
+				res.should.have.status( 403 );
+
+				res.headers.should.have.property( "set-cookie" ).which.is.an.Array().which.is.not.empty();
+
+				sid = getSID( res.headers );
+				sid.should.be.ok();
+			} );
+	} );
+
+	it( "provides information on missing user authentication", () => {
+		return HitchyDev.query.get( "/api/auth/current", null, {
+			cookie: `sessionId=${sid}`,
+		} )
+			.then( res => {
+				res.should.have.status( 200 );
+				res.headers.should.not.have.property( "set-cookie" );
+				res.data.should.be.Object().which.has.properties( "success", "authenticated" );
+				res.data.success.should.be.true();
+				res.data.authenticated.should.be.false();
+			} );
+	} );
+
+	it( "denies access to routes used to change user related data", () => {
+		const { User } = server.$hitchy.hitchy.runtime.models;
+		return User.list()
+			.then( list => list[0] )
+			.then( admin => admin.uuid )
+			.then( uuid =>
+				Promise.all( [
+					HitchyDev.query.get( "/api/user/" + uuid, null, { cookie: `sessionId=${sid}`, } )
+						.then( res => {
+							res.should.have.status( 403 );
+							res.data.error.should.be.eql( "access forbidden" );
+						} ),
+					HitchyDev.query.get( "/api/user/write/" + uuid, null, { cookie: `sessionId=${sid}`, } )
+						.then( res => {
+							res.should.have.status( 403 );
+							res.data.error.should.be.eql( "access forbidden" );
+						} ),
+					HitchyDev.query.get( "/api/user/replace/" + uuid, null, { cookie: `sessionId=${sid}`, } )
+						.then( res => {
+							res.should.have.status( 403 );
+							res.data.error.should.be.eql( "access forbidden" );
+						} ),
+					HitchyDev.query.put( "/api/user/" + uuid, null, { cookie: `sessionId=${sid}`, } )
+						.then( res => {
+							res.should.have.status( 403 );
+							res.data.error.should.be.eql( "access forbidden" );
+						} ),
+					HitchyDev.query.patch( "/api/user/" + uuid, null, { cookie: `sessionId=${sid}`, } )
+						.then( res => {
+							res.should.have.status( 403 );
+							res.data.error.should.be.eql( "access forbidden" );
+						} ),
+				] ) );
+	} );
+
+	it( "allows access to routes used to change user related data if logged in as admin", () => {
+		const { User } = server.$hitchy.hitchy.runtime.models;
+		return HitchyDev.query.post( "/api/auth/login", "username=admin&password=nimda", {
+			cookie: `sessionId=${sid}`,
+			"Content-Type": "application/x-www-form-urlencoded",
+		} )
+			.then( res => {
+				res.should.have.status( 200 );
+				res.headers.should.not.have.property( "set-cookie" );
+				res.data.success.should.be.true();
+			} )
+			.then( () => User.list() )
+			.then( list => list[0] )
+			.then( admin => {
+				const { uuid } = admin;
+				return Promise.all( [
+					HitchyDev.query.get( "/api/user/" + uuid, null, { cookie: `sessionId=${sid}`, } )
+						.then( res => {
+							res.should.have.status( 200 );
+						} ),
+					HitchyDev.query.get( "/api/user/write/" + uuid, null, { cookie: `sessionId=${sid}`, } )
+						.then( res => {
+							res.should.have.status( 200 );
+						} ),
+					HitchyDev.query.get( "/api/user/replace/" + uuid, null, { cookie: `sessionId=${sid}`, } )
+						.then( res => {
+							res.should.have.status( 200 );
+						} ),
+					HitchyDev.query.put( "/api/user/" + uuid, null, { cookie: `sessionId=${sid}`, } )
+						.then( res => {
+							res.should.have.status( 200 );
+						} ),
+					HitchyDev.query.patch( "/api/user/" + uuid, null, { cookie: `sessionId=${sid}`, } )
+						.then( res => {
+							res.should.have.status( 200 );
+						} ),
+				] );
+			} );
+	} );
+
+} );
+
