@@ -1,8 +1,6 @@
 "use strict";
 
 module.exports = function() {
-	const api = this;
-
 	return {
 		auth: {
 			// filterPassword: false,

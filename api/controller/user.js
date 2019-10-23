@@ -29,8 +29,6 @@
 "use strict";
 
 module.exports = function() {
-	const api = this;
-
 	return {
 		changePassword( req, res ) {
 			res.format( {

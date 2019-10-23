@@ -30,7 +30,7 @@
 
 const crypto = require( "crypto" );
 
-module.exports = function( options ) {
+module.exports = function() {
 	const api = this;
 
 	return {

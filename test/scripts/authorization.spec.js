@@ -67,7 +67,7 @@ describe( "Hitchy authorization", () => {
 			pluginsFolder: Path.resolve( __dirname, "../.." ),
 			testProjectFolder: Path.resolve( __dirname, "../project/authorization-with-filter-password" ),
 			options: {
-				debug: true,
+				// debug: true,
 			},
 		} )
 			.then( s => {
@@ -77,7 +77,7 @@ describe( "Hitchy authorization", () => {
 
 	after( "stopping hitchy", () => {
 		if ( server ) {
-			return HitchyDev.stop( server )
+			return HitchyDev.stop( server );
 		}
 		return undefined;
 	} );

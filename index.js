@@ -48,9 +48,11 @@ module.exports = function( options, plugins ) {
 
 			api.runtime.services.Passport.serializeUser( ( user, done ) => {
 				DebugLog( `serializeUser: { name: ${user.name}, role: ${user.role}, uuid: ${user.uuid} }` );
-				return api.runtime.models.User.list().then( entries => {
-					const admin = entries[0];
-					console.log( `user: { name: ${admin.name}, uuid: ${admin.uuid}, role: ${admin.role} }` ); } )
+				return api.runtime.models.User.list()
+					.then( entries => {
+						const admin = entries[0];
+						console.log( `user: { name: ${admin.name}, uuid: ${admin.uuid}, role: ${admin.role} }` );
+					} )
 					.then( () => done( null, user.uuid ) );
 			} );
 

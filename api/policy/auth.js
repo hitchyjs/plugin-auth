@@ -102,8 +102,6 @@ module.exports = function() {
 			}
 		},
 		requireAuthorization: ( req, res, next ) => {
-			const { url } = req;
-
 			if ( req.user ) {
 				next();
 			} else {

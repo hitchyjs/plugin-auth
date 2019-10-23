@@ -27,9 +27,7 @@
  */
 "use strict";
 
-module.exports = function( options ) {
-	const api = this;
-
+module.exports = function() {
 	return {
 		props: {
 			spec: {

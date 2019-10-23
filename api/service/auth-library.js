@@ -28,11 +28,10 @@
 
 "use strict";
 
-module.exports = function( options, pluginHandles, myHandle ) {
+module.exports = function() {
 	const api = this;
 	const cache = {};
 	const { models } = api.runtime;
-	const AlertLog = api.log( "hitchy:plugin:auth:alert" );
 	const DebugLog = api.log( "hitchy:plugin:auth:debug" );
 
 	return {
