@@ -49,7 +49,6 @@ module.exports = function() {
 							case 1 : {
 								const [user] = matches;
 								DebugLog( `authStrategy: authenticated as: name: ${user.name}, role: ${user.role}, uuid: ${user.uuid}` );
-								console.log( `authStrategy: user: { name: ${user.name}, uuid: ${user.uuid}, role: ${user.role} }` );
 								if ( user.verifyPassword( password ) ) {
 									return done( null, user );
 								}

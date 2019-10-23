@@ -47,7 +47,6 @@ module.exports = function( options, plugins ) {
 			const declaredStrategyNames = Object.keys( declaredStrategies );
 
 			api.runtime.services.Passport.serializeUser( ( user, done ) => {
-				console.trace( "serializeUser" );
 				DebugLog( `serializeUser: { name: ${user.name}, role: ${user.role}, uuid: ${user.uuid} }` );
 				return api.runtime.models.User.list().then( entries => {
 					const admin = entries[0];
@@ -56,19 +55,15 @@ module.exports = function( options, plugins ) {
 			} );
 
 			api.runtime.services.Passport.deserializeUser( ( uuid, done ) => {
-				return User.list()
-					.then( ( [admin] ) => console.log( { name: admin.name, role: admin.role, uuid: admin.uuid }, uuid ) )
-					.then( () => {
-						const user = new User( uuid );
-						return user.$exists
-							.then( exists => {
-								if ( exists ) return user.load();
-								throw new Error( "user uuid does not exist" );
-							} );
+				const user = new User( uuid );
+				return user.$exists
+					.then( exists => {
+						if ( exists ) return user.load();
+						throw new Error( "user uuid does not exist" );
 					} )
-					.then( user => {
-						DebugLog( `deserializeUser: name: ${user.name}, role: ${user.role}, uuid: ${user.uuid}` );
-						done( null, user );
+					.then( loadedUser => {
+						DebugLog( `deserializeUser: name: ${loadedUser.name}, role: ${loadedUser.role}, uuid: ${loadedUser.uuid}` );
+						done( null, loadedUser );
 					} )
 					.catch( done );
 			} );
