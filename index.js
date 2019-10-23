@@ -28,8 +28,6 @@
 
 "use strict";
 
-const Passport = require( "passport" );
-
 module.exports = function( options, plugins ) {
 	const api = this;
 	const AlertLog = api.log( "hitchy:plugin:auth:alert" );
@@ -48,18 +46,16 @@ module.exports = function( options, plugins ) {
 			const declaredStrategies = config.strategies || {};
 			const declaredStrategyNames = Object.keys( declaredStrategies );
 
-			Passport.serializeUser( ( user, done ) => {
+			api.runtime.services.Passport.serializeUser( ( user, done ) => {
 				console.trace( "serializeUser" );
 				DebugLog( `serializeUser: { name: ${user.name}, role: ${user.role}, uuid: ${user.uuid} }` );
-				return User.list()
-					.then( entries => {
-						const admin = entries[0];
-						console.log( `user: { name: ${admin.name}, uuid: ${admin.uuid}, role: ${admin.role} }` );
-					} )
+				return api.runtime.models.User.list().then( entries => {
+					const admin = entries[0];
+					console.log( `user: { name: ${admin.name}, uuid: ${admin.uuid}, role: ${admin.role} }` ); } )
 					.then( () => done( null, user.uuid ) );
 			} );
 
-			Passport.deserializeUser( ( uuid, done ) => {
+			api.runtime.services.Passport.deserializeUser( ( uuid, done ) => {
 				return User.list()
 					.then( ( [admin] ) => console.log( { name: admin.name, role: admin.role, uuid: admin.uuid }, uuid ) )
 					.then( () => {
@@ -82,14 +78,14 @@ module.exports = function( options, plugins ) {
 					const strategy = declaredStrategies[declaredStrategy];
 					if ( declaredStrategy != null ) {
 						try {
-							Passport.use( strategy );
+							api.runtime.services.Passport.use( strategy );
 						} catch ( e ) {
 							AlertLog( "strategy not compatible with passport.use:", declaredStrategy, e );
 						}
 					}
 				}
 			} else if ( !( declaredStrategies.local || declaredStrategies["passport-local"] ) ) {
-				Passport.use( AuthStrategies.generateLocal() );
+				api.runtime.services.Passport.use( AuthStrategies.generateLocal() );
 			}
 
 			const promises = [];
@@ -163,7 +159,8 @@ module.exports = function( options, plugins ) {
 						} );
 						break;
 					}
-					default : break;
+					default :
+						break;
 				}
 			}
 

@@ -40,7 +40,7 @@ module.exports = function() {
 		generateLocal: () => {
 			const strategy = new LocalStrategy( ( name, password, done ) => {
 				api.runtime.models.User
-					.find( { eq: { name: "name", value: name } }, {} ,{ loadRecords: true } )
+					.find( { eq: { name: "name", value: name } }, {}, { loadRecords: true } )
 					.then( matches => {
 						switch ( matches.length ) {
 							case 0 :
@@ -69,11 +69,13 @@ module.exports = function() {
 			strategy.passwordRequried = true;
 			return strategy;
 		},
+
 		defaultStrategy: () => {
 			const { defaultStrategy, strategies } = api.config.auth;
 			if ( defaultStrategy ) {
 				return defaultStrategy;
 			}
+
 			const strategiesNames = Object.keys( strategies );
 			return strategiesNames.length === 1 ? strategiesNames[0] : "local";
 		},

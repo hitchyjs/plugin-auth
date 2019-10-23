@@ -31,7 +31,6 @@
 const Path = require( "path" );
 
 const HitchyDev = require( "hitchy-server-dev-tools" );
-const Passport = require( "passport" );
 
 
 require( "should" );
@@ -93,7 +92,7 @@ describe( "Hitchy instance with plugin for oAuth user authentication and authori
 	} );
 
 	it( "should have found the oauth strategy in the config", () => {
-		Passport._strategies.oauth.should.not.be.undefined();
+		server.$hitchy.hitchy.runtime.services.Passport._strategies.oauth.should.not.be.undefined();
 	} );
 
 	it( "supports authentication of default user using POSTed form data", () => {

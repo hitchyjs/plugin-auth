@@ -230,7 +230,7 @@ describe( "Hitchy instance with plugin for server-side user authentication and a
 	} );
 } );
 
-describe("Hitchy authorization", () => {
+describe( "Hitchy authorization", () => {
 	let server = null;
 	let sid = null;
 

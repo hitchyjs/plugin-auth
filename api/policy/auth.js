@@ -28,8 +28,6 @@
 
 "use strict";
 
-const Passport = require( "passport" );
-
 module.exports = function() {
 	const api = this;
 	const AlertLog = api.log( "hitchy:plugin:auth:alert" );
@@ -37,11 +35,11 @@ module.exports = function() {
 
 	return {
 		initialize: ( req, res, next ) => {
-			Passport.initialize()( req, res, initializeError => {
+			api.runtime.services.Passport.initialize()( req, res, initializeError => {
 				if ( initializeError ) {
 					next( initializeError );
 				} else {
-					Passport.session()( req, res, sessionError => {
+					api.runtime.services.Passport.session()( req, res, sessionError => {
 						if ( req.session.user ) {
 							const { name, roles } = req.session.user;
 
@@ -60,7 +58,7 @@ module.exports = function() {
 
 			req.fetchBody().then( body => {
 				req.body = body;
-				Passport.authenticate( strategy || defaultStrategy )( req, res, err => {
+				api.runtime.services.Passport.authenticate( strategy || defaultStrategy )( req, res, err => {
 					if ( req.user ) {
 						const { uuid, name, roles } = req.user;
 						DebugLog( "authenticating: ", { uuid, name, roles, session: req.session.user } );
