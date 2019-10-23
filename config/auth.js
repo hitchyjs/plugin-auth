@@ -5,6 +5,7 @@ module.exports = function() {
 
 	return {
 		auth: {
+			// filterPassword: false,
 			strategies: {
 				// local: api.runtime.services.AuthStrategies.generateLocal()
 			},

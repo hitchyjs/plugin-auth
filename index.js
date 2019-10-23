@@ -35,9 +35,15 @@ module.exports = function( options, plugins ) {
 	const AlertLog = api.log( "hitchy:plugin:auth:alert" );
 	const DebugLog = api.log( "hitchy:plugin:auth:debug" );
 
+	if ( Object.keys( plugins ).some( name => plugins[name].role === "odm-provider" ) ) {
+		// application is using hitchy-plugin-odem-rest or some related drop-in
+		// -> assure to be processed before that
+		myApi.$meta.dependants = ["odm-provider"];
+	}
+
 	const myApi = {
 		initialize() {
-			const { models: { User, AuthRule, AuthSpec }, services: { AuthStrategies } } = api.runtime;
+			const { models: { User, AuthRule }, services: { AuthStrategies } } = api.runtime;
 			const config = api.config.auth || {};
 			const declaredStrategies = config.strategies || {};
 			const declaredStrategyNames = Object.keys( declaredStrategies );
@@ -105,12 +111,40 @@ module.exports = function( options, plugins ) {
 			return Promise.all( promises );
 		},
 
-		policies: {
-			"/": "Auth.initialize",
-			"/api/user": "Auth.requireAdmin",
-			"POST /api/auth/login": ["Auth.authenticate"],
-			"GET /api/auth/login": ["Auth.authenticate"],
-			"GET /api/auth/logout": ["Auth.dropAuth"],
+		policies: () => {
+			const policies = {
+				"/": "Auth.initialize",
+				"POST /api/auth/login": ["Auth.authenticate"],
+				"GET /api/auth/login": ["Auth.authenticate"],
+				"GET /api/auth/logout": ["Auth.dropAuth"],
+				"GET /api/user": "Auth.requireAdmin",
+			};
+
+			const odmPlugin = api.plugins["odm-provider"];
+			if ( odmPlugin ) {
+				DebugLog( "found odm-provider" );
+				switch ( odmPlugin.$name ) {
+					case "hitchy-plugin-odem-rest" : {
+						const { model, auth = {} } = api.config || {};
+						const { urlPrefix = "/api" } = model || {};
+						const odemRestPolicy = ["user.self"];
+						if ( auth.filterPassword ) odemRestPolicy.push(
+							req => req.fetchBody()
+								.then( body => { if ( body.password ) body.password = undefined; } )
+						);
+						Object.assign( policies, {
+							[`PUT ${urlPrefix}/user`]: odemRestPolicy,
+							[`PATCH ${urlPrefix}/user`]: odemRestPolicy,
+							[`GET ${urlPrefix}/user/write`]: odemRestPolicy,
+							[`PATCH ${urlPrefix}/user/replace`]: odemRestPolicy,
+						} );
+						break;
+					}
+					default : break;
+				}
+			}
+
+			return policies;
 		},
 
 		routes: {
@@ -120,12 +154,6 @@ module.exports = function( options, plugins ) {
 			"GET /api/auth/logout": "user.dropAuth",
 		},
 	};
-
-	if ( plugins["odm-provider"] ) {
-		// application is using hitchy-plugin-odem-rest or some related drop-in
-		// -> assure to be processed before that
-		myApi.$meta.dependants = ["odm-provider"];
-	}
 
 	return myApi;
 };

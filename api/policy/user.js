@@ -27,34 +27,58 @@
  */
 
 "use strict";
-const { OAuthStrategy } = require( "passport-oauth" );
 
 module.exports = function() {
 	const api = this;
-	const { User } = api.runtime.models;
+	const AlertLog = api.log( "hitchy:plugin:auth:alert" );
+	const DebugLog = api.log( "hitchy:plugin:auth:debug" );
 
 	return {
-		auth: {
-			strategies: {
-				oauth: new OAuthStrategy( {
-					requestTokenURL: "http://term.ie/oauth/example/request_token.php",
-					accessTokenURL: "http://term.ie/oauth/example/access_token.php",
-					userAuthorizationURL: "http://term.ie/oauth/example/echo_api.php",
-					consumerKey: "key",
-					consumerSecret: "secret",
-					callbackURL: "http://127.0.0.1:3000/api/auth/login",
-					signatureMethod: "RSA-SHA1"
-				},
-				function( token, tokenSecret, profile, cb ) {
-					return User.find( { eq: { name: "uuid", value: profile.uuid } }, {} ,{ loadRecords: true } ).then( user => {
-						return cb( undefined, user[0] );
-					} ).catch( err => {
-						return cb( err, undefined );
+		self: ( req, res, next ) => {
+			const { uuid, roles = [], name } = req.user || {};
+			DebugLog( "user.self:", `user: { uuid: ${uuid}, roles: ${roles}, name: ${name} }` );
+			let err;
+			if ( ( uuid == null || uuid !== req.params.uuid ) && roles.indexOf( "admin" ) < 0 ) {
+				res
+					.status( 403 )
+					.json( {
+						error: "access forbidden",
 					} );
-				}
-				)
-			},
-			defaultStrategy: "oauth",
+			}
+			next( err );
+		},
+		changePassword: ( req, res, next ) => {
+			const old1 = req.params.old1;
+			const old2 = req.params.old2;
+			const newPw = req.params.new;
+
+			const current = req.session.user;
+
+			if ( !current ) {
+				return next( "verification needed" );
+			}
+
+			if ( old1 !== old2 ) {
+				return next( "passwords do not match" );
+			}
+
+			const User = api.models.User;
+			const { uuid } = current;
+			const { load, setPassword, save } = new User( uuid );
+			return load()
+				.then( userRes => {
+					if ( !User.verifyPassword( old1, userRes.password ) ) {
+						return next( "wrong passwords" );
+					}
+
+					return setPassword( newPw )
+						.then( () => save() );
+
+				} )
+				.catch( err => {
+					AlertLog( err );
+					next( err );
+				} );
 		}
 	};
 };

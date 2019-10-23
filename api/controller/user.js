@@ -32,6 +32,16 @@ module.exports = function() {
 	const api = this;
 
 	return {
+		changePassword( req, res ) {
+			res.format( {
+				default() {
+					res.json( {
+						success: true
+					} );
+				}
+			} );
+		},
+
 		auth( req, res ) {
 			res.format( {
 				default() {

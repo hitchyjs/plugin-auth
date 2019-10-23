@@ -27,34 +27,13 @@
  */
 
 "use strict";
-const { OAuthStrategy } = require( "passport-oauth" );
 
 module.exports = function() {
 	const api = this;
-	const { User } = api.runtime.models;
 
 	return {
 		auth: {
-			strategies: {
-				oauth: new OAuthStrategy( {
-					requestTokenURL: "http://term.ie/oauth/example/request_token.php",
-					accessTokenURL: "http://term.ie/oauth/example/access_token.php",
-					userAuthorizationURL: "http://term.ie/oauth/example/echo_api.php",
-					consumerKey: "key",
-					consumerSecret: "secret",
-					callbackURL: "http://127.0.0.1:3000/api/auth/login",
-					signatureMethod: "RSA-SHA1"
-				},
-				function( token, tokenSecret, profile, cb ) {
-					return User.find( { eq: { name: "uuid", value: profile.uuid } }, {} ,{ loadRecords: true } ).then( user => {
-						return cb( undefined, user[0] );
-					} ).catch( err => {
-						return cb( err, undefined );
-					} );
-				}
-				)
-			},
-			defaultStrategy: "oauth",
+			filterPassword: "truthy",
 		}
 	};
 };

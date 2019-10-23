@@ -58,3 +58,18 @@ Whenever you want to stop Hitchy press Ctrl+C to gracefully shut it down.
 
 
 ## Try It Out
+
+The plugin injects special endpoints for managing a user's authentication.
+
+| endpoint | method | description |
+|----------|--------|-------------|
+| `/api/auth/login` | POST | Takes username and password in request body and uses them for authenticating selected user. |
+| `/api/auth/login` | GET | Does the same as the POST method and is mainly here as a redirect URI for external authorization |
+| `/api/auth/logout` | GET | Drops information on previously authenticated user. |
+| `/api/auth/check` | GET | Fetches status information on currently authenticated user. |
+
+
+In addition, this plugin is injecting policy requiring authenticated user to have authorization for role `admin` for accessing REST endpoint `/api/user`.
+
+
+

@@ -33,7 +33,7 @@
     "vuepress": "^1.1.0"
   },
   "dependencies": {
-    "hitchy-plugin-odem": "^0.4.2",
+    "hitchy-plugin-odem": "^0.4.5",
     "hitchy-plugin-cookies": "^0.1.1",
     "hitchy-plugin-session": "^0.1.4",
     "passport": "^0.4.0",
