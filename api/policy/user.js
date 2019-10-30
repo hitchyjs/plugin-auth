@@ -44,6 +44,7 @@ module.exports = function() {
 					.json( {
 						error: "access forbidden",
 					} );
+				return;
 			}
 			next( err );
 		},

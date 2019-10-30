@@ -64,8 +64,17 @@ describe( "Hitchy authorization", () => {
 
 	before( "starting hitchy", () => {
 		return HitchyDev.start( {
-			pluginsFolder: Path.resolve( __dirname, "../.." ),
-			testProjectFolder: Path.resolve( __dirname, "../project/authorization-with-filter-password" ),
+			files: {
+				"config/auth.js":
+					`"use strict";
+					module.exports = function() {
+						return {
+							auth: {
+								filterPassword: "truthy",
+							}
+						};
+					};`,
+			},
 			options: {
 				// debug: true,
 			},
