@@ -65,9 +65,20 @@ describe( "Hitchy instance with plugin for server-side user authentication and a
 	before( "starting hitchy", () => {
 		return HitchyDev.start( {
 			pluginsFolder: Path.resolve( __dirname, "../.." ),
-			testProjectFolder: Path.resolve( __dirname, "../project/basic" ),
+			files: {
+				"config/routes.js": `"use strict";
+
+exports.routes = {
+\t"GET /api/user": function( req, res ) {
+\t\treturn res.json( {
+\t\t\tsuccess: true,
+\t\t} );
+\t},
+};
+`
+			},
 			options: {
-				// debug: true,
+				debug: true,
 			},
 		} )
 			.then( s => {
@@ -202,7 +213,98 @@ describe( "Hitchy instance with plugin for server-side user authentication and a
 		} )
 			.then( res => {
 				res.should.have.status( 200 );
+				res.headers.should.not.have.property( "set-cookie" );
 				res.data.should.be.Object().which.has.property( "success" ).which.is.true();
+			} );
+	} );
+
+	let uuid;
+
+	it( "creates an new user using a REST API endpoint due to previous authentication as administrative user", () => {
+		return HitchyDev.query.post( "/api/user", {
+			name: "Test",
+			password: "test",
+			role: "user"
+		}, {
+			cookie: `sessionId=${sid}`,
+		} )
+			.then( res => {
+				res.should.have.status( 201 );
+				res.headers.should.not.have.property( "set-cookie" );
+				res.data.should.be.Object().which.has.property( "uuid" );
+				uuid = res.data.uuid;
+				return server.$hitchy.hitchy.runtime.models.User.list().then( list => list.length.should.be.eql( 2 ) );
+			} );
+	} );
+
+	it( "drops information on previously authenticated user on demand", () => {
+		return HitchyDev.query.get( "/api/auth/logout", null, {
+			cookie: `sessionId=${sid}`,
+		} )
+			.then( res => {
+				res.should.have.status( 200 );
+				res.headers.should.not.have.property( "set-cookie" );
+			} );
+	} );
+
+	it( "does not provide information on previously authenticated and now dropped user anymore though requesting in context of proper session again", () => {
+		return HitchyDev.query.get( "/api/auth/current", null, {
+			cookie: `sessionId=${sid}`,
+		} )
+			.then( res => {
+				res.should.have.status( 200 );
+				res.headers.should.have.property( "set-cookie" ).which.is.an.Array().which.is.not.empty();
+
+				const newSID = getSID( res.headers );
+				newSID.should.be.ok().and.not.equal( sid );
+				sid = newSID;
+
+				res.data.should.be.Object().which.has.properties( "success", "authenticated" );
+				res.data.success.should.be.true();
+				res.data.authenticated.should.be.false();
+			} );
+	} );
+
+	it( "supports authentication as a user using POSTed form data", () => {
+		return HitchyDev.query.post( "/api/auth/login", "username=Test&password=test", {
+			cookie: `sessionId=${sid}`,
+			"Content-Type": "application/x-www-form-urlencoded",
+		} )
+			.then( res => {
+				res.should.have.status( 200 );
+				res.headers.should.not.have.property( "set-cookie" );
+				res.data.success.should.be.true();
+			} );
+	} );
+
+	it( "provides information on previously authenticated user due to tracking user in server-side session", () => {
+		return HitchyDev.query.get( "/api/auth/current", null, {
+			cookie: `sessionId=${sid}`,
+		} )
+			.then( res => {
+				res.should.have.status( 200 );
+				res.headers.should.not.have.property( "set-cookie" );
+				res.data.should.be.Object().which.has.properties( "success", "authenticated" );
+				res.data.success.should.be.true();
+				res.data.authenticated.should.not.be.false();
+			} );
+	} );
+
+	it( "rejects access on REST API endpoint /api/user due to lack of authorization", () => {
+		return HitchyDev.query.get( "/api/user", null, {
+			cookie: `sessionId=${sid}`,
+		} )
+			.then( res => {
+				res.should.have.status( 403 );
+			} );
+	} );
+
+	it( "allows access on REST API endpoint /api/user/:uuid when uuid is own uuid", () => {
+		return HitchyDev.query.get( "/api/user/" + uuid, null, {
+			cookie: `sessionId=${sid}`,
+		} )
+			.then( res => {
+				res.should.have.status( 200 );
 			} );
 	} );
 } );

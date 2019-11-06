@@ -101,17 +101,6 @@ module.exports = function() {
 					} );
 			}
 		},
-		requireAuthorization: ( req, res, next ) => {
-			if ( req.user ) {
-				next();
-			} else {
-				res
-					.status( 403 )
-					.json( {
-						error: "access forbidden",
-					} );
-			}
-		},
 		requireAdmin: ( req, res, next ) => {
 			if ( !req.user || req.user.roles.indexOf( "admin" ) < 0 ) {
 				res

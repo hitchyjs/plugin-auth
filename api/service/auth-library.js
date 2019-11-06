@@ -232,7 +232,7 @@ module.exports = function() {
 			const values = this.findAuthRules( authSpec );
 
 			/**
-			 * checks if the rules have an authz
+			 * checks if the rules have an authRule
 			 * @param {{roles:[], userUUID: []}} rules set of rules for roles and userUUID
 			 * @param {string} set "neg" or "pos" corresponding to neg and pos rules
 			 * @return {boolean} if rule contains authz
