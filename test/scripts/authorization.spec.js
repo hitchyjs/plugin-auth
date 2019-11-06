@@ -62,19 +62,10 @@ describe( "Hitchy authorization", () => {
 	let server = null;
 	let sid = null;
 
-	before( "starting hitchy", () => {
+	before( "starting hitchy", function() {
 		return HitchyDev.start( {
-			files: {
-				"config/auth.js":
-					`"use strict";
-					module.exports = function() {
-						return {
-							auth: {
-								filterPassword: "truthy",
-							}
-						};
-					};`,
-			},
+			pluginsFolder: Path.resolve( __dirname, "../.." ),
+			testProjectFolder: Path.resolve( __dirname, "../project/basic" ),
 			options: {
 				// debug: true,
 			},
