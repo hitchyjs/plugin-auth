@@ -29,10 +29,11 @@
 "use strict";
 
 module.exports = function() {
-	const api = this;
-
 	return {
 		hasRole( roles ) {
+			if ( !roles ) {
+				throw new Error( "no Roles provided for hasRole PolicyGenerator" );
+			}
 			let cache = {};
 			if ( Array.isArray( roles ) ) {
 				for ( const role of roles ) {
@@ -44,22 +45,27 @@ module.exports = function() {
 				cache[roles] = true;
 			}
 			return ( req, res, next ) => {
-				let hasRole = false;
-				for ( const role of req.user.roles ) {
-					if ( cache[role] ) hasRole = true;
+				if ( req.user ) {
+					let authorized = false;
+					for ( const role of req.user.roles ) {
+						if ( cache[role] || role === "admin" ) authorized = true;
+					}
+					if ( !authorized ) {
+						next();
+						return;
+					}
 				}
-				if ( !req.user || !hasRole ) {
-					res
-						.status( 403 )
-						.json( {
-							error: "access forbidden",
-						} );
-				} else {
-					next();
-				}
+				res
+					.status( 403 )
+					.json( {
+						error: "access forbidden",
+					} );
 			};
 		},
 		hasAuthorization( authSpecs ) {
+			if ( !authSpecs ) {
+				throw new Error( "no authSpecs provided for hasAuthorization PolicyGenerator" );
+			}
 			let _authSpecs = authSpecs;
 			if ( !Array.isArray( _authSpecs ) ) {
 				_authSpecs = [_authSpecs];
@@ -72,7 +78,7 @@ module.exports = function() {
 					}
 					if ( authorized ) {
 						next();
-						return undefined;
+						return;
 					}
 				}
 				res
@@ -80,7 +86,6 @@ module.exports = function() {
 					.json( {
 						error: "access forbidden",
 					} );
-				return undefined;
 			};
 		}
 	};
