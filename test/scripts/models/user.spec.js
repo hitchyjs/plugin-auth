@@ -51,9 +51,8 @@ describe( "the user model", () => {
 			} );
 	} );
 
-	after( "stopping hitchy", () => {
-		return server ? HitchyDev.stop( server ) : undefined;
-	} );
+	after( "stopping hitchy", () => ( server ? HitchyDev.stop( server ) : undefined ) );
+
 
 	it( "is available", () => {
 		server.$hitchy.hitchy.runtime.models.User.should.not.be.undefined();

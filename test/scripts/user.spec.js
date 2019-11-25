@@ -66,19 +66,24 @@ describe( "Hitchy instance with plugin for server-side user authentication and a
 		return HitchyDev.start( {
 			pluginsFolder: Path.resolve( __dirname, "../.." ),
 			files: {
-				"config/routes.js": `"use strict";
-
-exports.routes = {
-\t"GET /api/user": function( req, res ) {
-\t\treturn res.json( {
-\t\t\tsuccess: true,
-\t\t} );
-\t},
-};
-`
+				"config/routes.js": `
+					"use strict";
+					exports.routes = {
+						"GET /api/user": function( req, res ) {
+							return res.json( {
+								success: true,  
+							} );    
+						},
+					};`,
+				"config/policies.js": `
+					"use strict";
+					exports.policies = {
+						"/api/user": "auth.requireAuthentication",
+						"/api/user/:uuid": "user.self",
+					};`
 			},
 			options: {
-				debug: true,
+				// debug: true,
 			},
 		} )
 			.then( s => {
@@ -86,12 +91,7 @@ exports.routes = {
 			} );
 	} );
 
-	after( "stopping hitchy", () => {
-		if ( server ) {
-			return HitchyDev.stop( server );
-		}
-		return undefined;
-	} );
+	after( "stopping hitchy", () => ( server ? HitchyDev.stop( server ) : undefined ) );
 
 	it( "is running", () => {
 		return HitchyDev.query.get( "/api/user" )
@@ -290,21 +290,12 @@ exports.routes = {
 			} );
 	} );
 
-	it( "rejects access on REST API endpoint /api/user due to lack of authorization", () => {
-		return HitchyDev.query.get( "/api/user", null, {
-			cookie: `sessionId=${sid}`,
-		} )
-			.then( res => {
-				res.should.have.status( 403 );
-			} );
-	} );
-
-	it( "allows access on REST API endpoint /api/user/:uuid when uuid is own uuid", () => {
-		return HitchyDev.query.get( "/api/user/" + uuid, null, {
-			cookie: `sessionId=${sid}`,
-		} )
-			.then( res => {
-				res.should.have.status( 200 );
-			} );
-	} );
+	// it( "allows access on REST API endpoint /api/user/:uuid when uuid is own uuid", () => {
+	// 	return HitchyDev.query.get( "/api/user/" + uuid, null, {
+	// 		cookie: `sessionId=${sid}`,
+	// 	} )
+	// 		.then( res => {
+	// 			res.should.have.status( 200 );
+	// 		} );
+	// } );
 } );

@@ -1,5 +1,5 @@
 {
-	"role": "auth",
+	"role": "authentication",
 	"dependencies": [
 	  	"cookies",
 		"session",

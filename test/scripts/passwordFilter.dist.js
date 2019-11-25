@@ -74,7 +74,7 @@ module.exports = {
 }`,
 		},
 		options: {
-			debug: true,
+			// debug: true,
 		}
 	} ).then( s => ( server = s ) ) );
 

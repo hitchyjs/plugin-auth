@@ -28,60 +28,8 @@
 
 "use strict";
 
-module.exports = function() {
-	const api = this;
-
-	return {
-		hasRole( roles ) {
-			let cache = {};
-			if ( Array.isArray( roles ) ) {
-				for ( const role of roles ) {
-					cache[role] = true;
-				}
-			} else if ( roles instanceof Object ) {
-				cache = roles;
-			} else {
-				cache[roles] = true;
-			}
-			return ( req, res, next ) => {
-				let hasRole = false;
-				for ( const role of req.user.roles ) {
-					if ( cache[role] ) hasRole = true;
-				}
-				if ( !req.user || !hasRole ) {
-					res
-						.status( 403 )
-						.json( {
-							error: "access forbidden",
-						} );
-				} else {
-					next();
-				}
-			};
-		},
-		hasAuthorization( authSpecs ) {
-			let _authSpecs = authSpecs;
-			if ( !Array.isArray( _authSpecs ) ) {
-				_authSpecs = [_authSpecs];
-			}
-			return function( req, res, next ) {
-				if ( req.user ) {
-					let authorized = false;
-					for ( const authSpec of _authSpecs ) {
-						if ( this.services.AuthLibrary.authorize( req.user, authSpec ) ) authorized = true;
-					}
-					if ( authorized ) {
-						next();
-						return undefined;
-					}
-				}
-				res
-					.status( 403 )
-					.json( {
-						error: "access forbidden",
-					} );
-				return undefined;
-			};
-		}
-	};
+exports.policies = {
+	before: {
+		"/api/user": "auth.requireAdmin",
+	}
 };

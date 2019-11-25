@@ -36,17 +36,8 @@ module.exports = function() {
 	return {
 		self: ( req, res, next ) => {
 			const { uuid, roles = [], name } = req.user || {};
-			DebugLog( "user.self:", `user: { uuid: ${uuid}, roles: ${roles}, name: ${name} }` );
-			let err;
-			if ( ( uuid == null || uuid !== req.params.uuid ) && roles.indexOf( "admin" ) < 0 ) {
-				res
-					.status( 403 )
-					.json( {
-						error: "access forbidden",
-					} );
-				return;
-			}
-			next( err );
+			DebugLog( "user.self:", `user: { uuid: ${uuid}, roles: ${roles}, name: ${name} }`, req.params.uuid );
+			req.$auth.isAuthenticated = ( uuid != null && uuid === req.params.uuid ) || roles.indexOf( "admin" ) >= 0;
 		},
 		changePassword: ( req, res, next ) => {
 			const current = req.user;

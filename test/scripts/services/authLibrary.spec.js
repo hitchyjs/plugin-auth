@@ -54,9 +54,7 @@ describe( "AuthRuleLibrary", () => {
 				} );
 		} );
 
-		after( "stopping hitchy", () => {
-			return server ? HitchyDev.stop( server ) : undefined;
-		} );
+		after( "stopping hitchy", () => ( server ? HitchyDev.stop( server ) : undefined ) );
 
 		describe( "adding", () => {
 			describe( "with exisiting spec", () => {

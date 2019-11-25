@@ -97,7 +97,7 @@ module.exports = function() {
 				res
 					.status( 403 )
 					.json( {
-						error: "access forbidden",
+						error: "access forbidden: wrong password",
 					} );
 			}
 		},
@@ -106,7 +106,7 @@ module.exports = function() {
 				res
 					.status( 403 )
 					.json( {
-						error: "access forbidden",
+						error: "access forbidden: wrong password",
 					} );
 			} else {
 				next();

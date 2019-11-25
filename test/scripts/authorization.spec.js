@@ -58,9 +58,10 @@ function getSID( headers ) {
 	return found;
 }
 
-describe( "Hitchy authorization", () => {
+describe( "Hitchy authorization", function() {
 	let server = null;
 	let sid = null;
+	this.timeout( 30000 );
 
 	before( "starting hitchy", function() {
 		return HitchyDev.start( {
@@ -85,12 +86,11 @@ describe( "Hitchy authorization", () => {
 	it( "is running", () => {
 		return HitchyDev.query.get( "/api/user" )
 			.then( res => {
-				res.should.have.status( 403 );
-
 				res.headers.should.have.property( "set-cookie" ).which.is.an.Array().which.is.not.empty();
-
 				sid = getSID( res.headers );
 				sid.should.be.ok();
+
+				res.should.have.status( 403 );
 			} );
 	} );
 
@@ -117,27 +117,27 @@ describe( "Hitchy authorization", () => {
 					HitchyDev.query.get( "/api/user/" + uuid, null, { cookie: `sessionId=${sid}`, } )
 						.then( res => {
 							res.should.have.status( 403 );
-							res.data.error.should.be.eql( "access forbidden" );
+							res.data.error.should.be.startWith( "access forbidden" );
 						} ),
 					HitchyDev.query.get( "/api/user/write/" + uuid, null, { cookie: `sessionId=${sid}`, } )
 						.then( res => {
 							res.should.have.status( 403 );
-							res.data.error.should.be.eql( "access forbidden" );
+							res.data.error.should.be.startWith( "access forbidden" );
 						} ),
 					HitchyDev.query.get( "/api/user/replace/" + uuid, null, { cookie: `sessionId=${sid}`, } )
 						.then( res => {
 							res.should.have.status( 403 );
-							res.data.error.should.be.eql( "access forbidden" );
+							res.data.error.should.be.startWith( "access forbidden" );
 						} ),
 					HitchyDev.query.put( "/api/user/" + uuid, null, { cookie: `sessionId=${sid}`, } )
 						.then( res => {
 							res.should.have.status( 403 );
-							res.data.error.should.be.eql( "access forbidden" );
+							res.data.error.should.be.startWith( "access forbidden" );
 						} ),
 					HitchyDev.query.patch( "/api/user/" + uuid, null, { cookie: `sessionId=${sid}`, } )
 						.then( res => {
 							res.should.have.status( 403 );
-							res.data.error.should.be.eql( "access forbidden" );
+							res.data.error.should.be.startWith( "access forbidden" );
 						} ),
 				] ) );
 	} );

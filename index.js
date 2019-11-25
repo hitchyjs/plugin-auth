@@ -43,8 +43,6 @@ module.exports = function( options, plugins ) {
 		initialize() {
 			const { models: { User, AuthRule }, services: { AuthStrategies } } = api.runtime;
 			const config = api.config.auth || {};
-			const declaredStrategies = config.strategies || {};
-			const declaredStrategyNames = Object.keys( declaredStrategies );
 
 			api.runtime.services.Passport.serializeUser( ( user, done ) => {
 				DebugLog( `serializeUser: { name: ${user.name}, role: ${user.role}, uuid: ${user.uuid} }` );
@@ -65,10 +63,12 @@ module.exports = function( options, plugins ) {
 					.catch( done );
 			} );
 
+			const declaredStrategies = config.strategies || {};
+			const declaredStrategyNames = Object.keys( declaredStrategies );
 			if ( declaredStrategyNames.length ) {
 				for ( const declaredStrategy of declaredStrategyNames ) {
 					const strategy = declaredStrategies[declaredStrategy];
-					if ( declaredStrategy != null ) {
+					if ( strategy != null ) {
 						try {
 							api.runtime.services.Passport.use( strategy );
 						} catch ( e ) {
