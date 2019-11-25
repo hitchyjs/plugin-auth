@@ -50,7 +50,7 @@ module.exports = function() {
 					for ( const role of req.user.roles ) {
 						if ( cache[role] || role === "admin" ) authorized = true;
 					}
-					if ( !authorized ) {
+					if ( authorized ) {
 						next();
 						return;
 					}
