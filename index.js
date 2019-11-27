@@ -110,10 +110,56 @@ module.exports = function( options, plugins ) {
 			promises.push(
 				AuthRule.list( { loadProperties: true } )
 					.then( entries => {
-						DebugLog( `loading ${entries.length} authSpec${entries.length === 1 ? "" : "s"} into the AuthLibrary` );
-						for ( const entry of entries ) {
-							api.runtime.services.AuthLibrary.addAuthRule( entry );
+						if ( entries.length ) {
+							DebugLog( `loading ${entries.length} authSpec${entries.length === 1 ? "" : "s"} from dataBase` );
+							for ( const entry of entries ) {
+								api.runtime.services.AuthLibrary.addAuthRule( entry );
+							}
+						} else {
+							const declaredRules = config.rules || [];
+							const normalizedRules = [];
+
+							for ( const ruleSet of declaredRules ) {
+								if ( typeof ruleSet === "object" ) {
+									if ( !Array.isArray( ruleSet ) ) {
+										const declaredRuleNames = Object.keys( ruleSet );
+										for ( const name of declaredRuleNames ) {
+											const rule = ruleSet[name];
+											if ( rule != null ) {
+												normalizedRules.push( Object.assign( {}, rule, { spec: name } ) );
+											}
+										}
+									}
+									if ( Array.isArray( ruleSet ) ) {
+										for ( const rule of ruleSet ) {
+											if ( rule.spec == null ) {
+												AlertLog( "rule with missing spec detected", rule );
+											} else {
+												normalizedRules.push( rule );
+											}
+										}
+									}
+								}
+							}
+
+							if ( normalizedRules.length ) {
+								const CreatingEntries = [];
+								DebugLog( `loading ${normalizedRules.length} authSpec${normalizedRules.length === 1 ? "" : "s"} from config` );
+								for ( const rule of normalizedRules ) {
+									if ( rule != null ) {
+										const authRule = new api.runtime.models.AuthRule();
+										const keys = Object.keys( rule );
+										for ( const key of keys ) {
+											if ( rule[key] )authRule[key] = rule[key];
+										}
+										CreatingEntries.push( authRule.save().then( () => api.runtime.services.AuthLibrary.addAuthRule( authRule ) ) );
+									}
+								}
+								return Promise.all( CreatingEntries );
+							}
 						}
+						return undefined;
+					} ).then( () => {
 						DebugLog( `finished tree for AuthRuleLibrary:` );
 						api.runtime.services.AuthLibrary.logAuthTree();
 					} )

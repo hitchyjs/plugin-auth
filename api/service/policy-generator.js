@@ -74,7 +74,7 @@ module.exports = function() {
 				if ( req.user ) {
 					let authorized = false;
 					for ( const authSpec of _authSpecs ) {
-						if ( this.services.AuthLibrary.authorize( req.user, authSpec ) ) authorized = true;
+						if ( this.services.AuthLibrary.authorize( req.user, authSpec ) || req.user.roles.indexOf( "admin" ) >= 0 ) authorized = true;
 					}
 					if ( authorized ) {
 						next();

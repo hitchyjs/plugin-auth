@@ -161,11 +161,11 @@ describe( "AuthRuleLibrary", () => {
 						return authSpec.load()
 							.then( ( { spec } ) => {
 								const AuthLibrary = server.$hitchy.hitchy.runtime.services.AuthLibrary;
-								AuthLibrary.getNodePath( spec ).should.have.length( 3 );
+								const length = AuthLibrary.getNodePath( spec ).length;
 								return authRule.remove()
 									.then( () => {
 										AuthLibrary.logAuthTree();
-										AuthLibrary.getNodePath( spec ).should.have.length( 2 );
+										AuthLibrary.getNodePath( spec ).should.have.length( length - 1 );
 									} );
 							} );
 
@@ -196,7 +196,7 @@ describe( "AuthRuleLibrary", () => {
 										return authRule.save()
 											.then( () => {
 												AuthLibrary.listAuthRules( false ).length.should.be.eql( length + 1 );
-												AuthLibrary.getNodePath( spec ).should.have.length( 2 );
+												AuthLibrary.getNodePath( spec ).should.have.length( 1 );
 												return AuthSpec.list( list => list.length.should.be.eql( numSpec + 1 ) );
 											} );
 									} );
@@ -227,7 +227,7 @@ describe( "AuthRuleLibrary", () => {
 										return authRule.save()
 											.then( () => {
 												AuthLibrary.listAuthRules( false ).length.should.be.eql( length );
-												AuthLibrary.getNodePath( spec ).should.have.length( 2 );
+												AuthLibrary.getNodePath( spec ).should.have.length( 1 );
 												return AuthSpec.list( list => list.length.should.be.eql( numSpec - 1 ) );
 											} );
 									} );

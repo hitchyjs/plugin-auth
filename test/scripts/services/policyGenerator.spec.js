@@ -67,7 +67,7 @@ describe( "policy-generator", () => {
 					useTmpPath: true,
 					pluginsFolder: Path.resolve( __dirname, "../../../" ),
 					options: {
-						debug: true,
+						// debug: true,
 					}
 				} ).then( s => {
 					server = s;
@@ -117,6 +117,196 @@ describe( "policy-generator", () => {
 								return {
 									policies: {
 										"/developer": api.runtime.services.PolicyGenerator.hasRole("developer")
+									},
+								};
+							}
+						`,
+					},
+					pluginsFolder: Path.resolve( __dirname, "../../../" ),
+					options: {
+						// debug: true
+					}
+				} ).then( s => {
+					server = s;
+					const user = new server.$hitchy.hitchy.runtime.models.User();
+					user.name = "developer";
+					user.role = "developer";
+					user.password = "developer";
+					return user.save();
+				} ).then( () => {
+					const user = new server.$hitchy.hitchy.runtime.models.User();
+					user.name = "nonDeveloper";
+					user.role = "nonDeveloper";
+					user.password = "nonDeveloper";
+					return user.save();
+				} );
+			} );
+
+			after( "stopping hitchy", () => ( server ? HitchyDev.stop( server ) : undefined ) );
+
+			it( "blocks requests on the route with an hasRole policy", () => {
+				return HitchyDev.query.get( "/developer" )
+					.then( res => {
+						res.headers.should.have.property( "set-cookie" ).which.is.an.Array().which.is.not.empty();
+						sid = getSID( res.headers );
+
+						res.should.have.status( 403 );
+					} );
+			} );
+
+			it( "allows login as developer", () => {
+				return HitchyDev.query.post( "/api/auth/login", "username=developer&password=developer", {
+					cookie: `sessionId=${sid}`,
+					"Content-Type": "application/x-www-form-urlencoded",
+				} ).then( res => {
+					res.should.have.status( 200 );
+					res.headers.should.not.have.property( "set-cookie" );
+					res.data.success.should.be.true();
+				} );
+			} );
+
+			it( "allows requests on the route with an hasRole policy", () => {
+				return HitchyDev.query.get( "/developer", "", {
+					cookie: `sessionId=${sid}`,
+					"Content-Type": "application/x-www-form-urlencoded",
+				} ).then( res => {
+					res.should.have.status( 200 );
+					res.headers.should.not.have.property( "set-cookie" );
+					res.data.success.should.be.true();
+				} );
+			} );
+
+			it( "drops information on previously authenticated user on demand", () => {
+				return HitchyDev.query.get( "/api/auth/logout", null, {
+					cookie: `sessionId=${sid}`,
+				} )
+					.then( res => {
+						res.should.have.status( 200 );
+						res.headers.should.not.have.property( "set-cookie" );
+					} );
+			} );
+
+			it( "blocks requests on the route with an hasRole policy", () => {
+				return HitchyDev.query.get( "/developer" )
+					.then( res => {
+						res.headers.should.have.property( "set-cookie" ).which.is.an.Array().which.is.not.empty();
+						sid = getSID( res.headers );
+
+						res.should.have.status( 403 );
+					} );
+			} );
+
+			it( "allows login as nonDeveloper", () => {
+				return HitchyDev.query.post( "/api/auth/login", "username=nonDeveloper&password=nonDeveloper", {
+					cookie: `sessionId=${sid}`,
+					"Content-Type": "application/x-www-form-urlencoded",
+				} ).then( res => {
+					res.should.have.status( 200 );
+					res.headers.should.not.have.property( "set-cookie" );
+					res.data.success.should.be.true();
+				} );
+			} );
+
+			it( "block requests on the route with an hasRole policy", () => {
+				return HitchyDev.query.get( "/developer", "", {
+					cookie: `sessionId=${sid}`,
+					"Content-Type": "application/x-www-form-urlencoded",
+				} ).then( res => {
+					res.should.have.status( 403 );
+					res.headers.should.not.have.property( "set-cookie" );
+				} );
+			} );
+
+			it( "drops information on previously authenticated user on demand", () => {
+				return HitchyDev.query.get( "/api/auth/logout", null, {
+					cookie: `sessionId=${sid}`,
+				} )
+					.then( res => {
+						res.should.have.status( 200 );
+						res.headers.should.not.have.property( "set-cookie" );
+					} );
+			} );
+
+			it( "blocks requests on the route with an hasRole policy", () => {
+				return HitchyDev.query.get( "/developer" )
+					.then( res => {
+						res.headers.should.have.property( "set-cookie" ).which.is.an.Array().which.is.not.empty();
+						sid = getSID( res.headers );
+
+						res.should.have.status( 403 );
+					} );
+			} );
+
+			it( "allows login as admin", () => {
+				return HitchyDev.query.post( "/api/auth/login", "username=admin&password=nimda", {
+					cookie: `sessionId=${sid}`,
+					"Content-Type": "application/x-www-form-urlencoded",
+				} ).then( res => {
+					res.should.have.status( 200 );
+					res.headers.should.not.have.property( "set-cookie" );
+					res.data.success.should.be.true();
+				} );
+			} );
+
+			it( "allows requests on the route with an hasRole policy", () => {
+				return HitchyDev.query.get( "/developer", "", {
+					cookie: `sessionId=${sid}`,
+					"Content-Type": "application/x-www-form-urlencoded",
+				} ).then( res => {
+					res.should.have.status( 200 );
+					res.headers.should.not.have.property( "set-cookie" );
+					res.data.success.should.be.true();
+				} );
+			} );
+		} );
+
+		describe( "hasAuthorization", () => {
+			let server, sid;
+			before( function() {
+				return HitchyDev.start( {
+					files: {
+						"config/auth.js": `
+							"use strict"
+							
+							module.exports = {
+								auth: {
+									rules: {
+										"developer.read": {
+											role: "developer",
+											positive: true,
+										},
+										"developer": {
+											positive: false,
+										}
+									}
+								}
+							}
+						`,
+						"config/routes.js": `
+							"use strict"
+							
+							module.exports = function () {
+								const api = this;
+								
+								return {
+									routes: {
+										"/developer": function( req, res ) {
+											return res.json( {
+												success: true,
+											} );
+										},
+									},
+								};
+							}
+						`,"config/policies.js": `
+							"use strict"
+							
+							module.exports = function () {
+								const api = this;
+								
+								return {
+									policies: {
+										"/developer": api.runtime.services.PolicyGenerator.hasAuthorization("developer.read")
 									},
 								};
 							}

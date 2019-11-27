@@ -37,7 +37,8 @@ module.exports = function() {
 	return {
 		addAuthRule( { authSpecUUID, role, userUUID, positive } ) {
 			return new models.AuthSpec( authSpecUUID ).load()
-				.then( ( { spec } ) => {
+				.then( authSpec => {
+					const _spec = authSpec.spec;
 					const list = positive ? "pos" : "neg";
 
 					/**
@@ -67,7 +68,7 @@ module.exports = function() {
 						}
 					}
 
-					fillValues( this.findNode( spec ) );
+					fillValues( this.findNode( _spec ) );
 				} );
 		},
 		removeAuthRule( { authSpecUUID, role, userUUID, positive } ) {
@@ -198,12 +199,12 @@ module.exports = function() {
 		},
 		getNodePath( spec ) {
 			let pointer = cache;
-			const rules = [pointer.values];
+			const rules = pointer.values ? [pointer.values] : [];
 
 			if ( spec ) {
 				const parts = spec.split( "." );
 				for ( const part of parts ) {
-					if ( pointer.children[part] ) {
+					if ( pointer.children && pointer.children[part] ) {
 						pointer = pointer.children[part];
 						rules.push( pointer.values );
 					} else {
