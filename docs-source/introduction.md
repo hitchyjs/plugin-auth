@@ -26,5 +26,5 @@ An optional server-side session can be used to track the authentication of a use
 By default an Admin user will be created on first start up. The Admin has access to all routes and all Models. All new 
 accounts will be treated as Users and have restricted access to your App.
 
-The roles and access rules Hitchy-Plugin-Auth knows are fully customizable to fit to your needs.
+The roles and  authRules Hitchy-Plugin-Auth knows are fully customizable to fit to your needs.
 

@@ -41,15 +41,16 @@ module.exports = function( options, plugins ) {
 
 	const myApi = {
 		initialize() {
-			const { models: { User, AuthRule }, services: { AuthStrategies } } = api.runtime;
-			const config = api.config.auth || {};
+			const { models: { User, AuthRule }, services: { AuthStrategies, AuthLibrary, Passport } } = api.runtime;
+			const { rules, strategies } = api.config.auth || {};
 
-			api.runtime.services.Passport.serializeUser( ( user, done ) => {
+			// initializing PassportJs
+			Passport.serializeUser( ( user, done ) => {
 				DebugLog( `serializeUser: { name: ${user.name}, role: ${user.role}, uuid: ${user.uuid} }` );
 				return done( null, user.uuid );
 			} );
 
-			api.runtime.services.Passport.deserializeUser( ( uuid, done ) => {
+			Passport.deserializeUser( ( uuid, done ) => {
 				const user = new User( uuid );
 				return user.$exists
 					.then( exists => {
@@ -63,7 +64,8 @@ module.exports = function( options, plugins ) {
 					.catch( done );
 			} );
 
-			const declaredStrategies = config.strategies || {};
+			// handling declared Strategies from config.auth.strategies
+			const declaredStrategies = strategies || {};
 			const declaredStrategyNames = Object.keys( declaredStrategies );
 			if ( declaredStrategyNames.length ) {
 				for ( const declaredStrategy of declaredStrategyNames ) {
@@ -77,11 +79,12 @@ module.exports = function( options, plugins ) {
 					}
 				}
 			} else if ( !( declaredStrategies.local || declaredStrategies["passport-local"] ) ) {
-				api.runtime.services.Passport.use( AuthStrategies.generateLocal() );
+				Passport.use( AuthStrategies.generateLocal() );
 			}
 
 			const promises = [];
 
+			// check if admin user exists if not create default admin
 			promises.push(
 				User.find( { eq: { name: "role", value: "admin" }, } )
 					.then( matches => {
@@ -107,16 +110,17 @@ module.exports = function( options, plugins ) {
 					} )
 			);
 
+			// check if authRules exist if not use and save authRules declared in config.auth.rules
 			promises.push(
 				AuthRule.list( { loadProperties: true } )
 					.then( entries => {
 						if ( entries.length ) {
 							DebugLog( `loading ${entries.length} authSpec${entries.length === 1 ? "" : "s"} from dataBase` );
 							for ( const entry of entries ) {
-								api.runtime.services.AuthLibrary.addAuthRule( entry );
+								AuthLibrary.addAuthRule( entry );
 							}
 						} else {
-							const declaredRules = config.rules || [];
+							const declaredRules = rules || [];
 							const normalizedRules = [];
 
 							for ( const ruleSet of declaredRules ) {
@@ -147,7 +151,7 @@ module.exports = function( options, plugins ) {
 								DebugLog( `loading ${normalizedRules.length} authSpec${normalizedRules.length === 1 ? "" : "s"} from config` );
 								for ( const rule of normalizedRules ) {
 									if ( rule != null ) {
-										const authRule = new api.runtime.models.AuthRule();
+										const authRule = new AuthRule();
 										const keys = Object.keys( rule );
 										for ( const key of keys ) {
 											if ( rule[key] )authRule[key] = rule[key];
@@ -161,7 +165,7 @@ module.exports = function( options, plugins ) {
 						return undefined;
 					} ).then( () => {
 						DebugLog( `finished tree for AuthRuleLibrary:` );
-						api.runtime.services.AuthLibrary.logAuthTree();
+						AuthLibrary.logAuthTree();
 					} )
 			);
 

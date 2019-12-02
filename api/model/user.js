@@ -42,7 +42,7 @@ module.exports = function() {
 				type: "string",
 			},
 			role: {
-				required: true,
+				type: "string",
 			},
 			strategy: {},
 			provider: {},
@@ -85,7 +85,7 @@ module.exports = function() {
 			 * Derives salted hash from provided password.
 			 *
 			 * @param {string} cleartext cleartext password to be hashed
-			 * @param {string} salt salt or previously derived hash consisting salt to be re-used
+			 * @param {Buffer|string} salt salt or previously derived hash consisting salt to be re-used
 			 * @return {Promise<string>} promises derived hash
 			 */
 			hashPassword( cleartext, salt = null ) {
