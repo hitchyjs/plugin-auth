@@ -149,7 +149,6 @@ module.exports = function() {
 				}
 			}
 			return ( !pointer.children || Object.keys( pointer.children ).length === 0 ) && !pointer.values;
-
 		},
 		findNode( spec ) {
 			let pointer = cache;
@@ -184,7 +183,7 @@ module.exports = function() {
 			 * recursively adds all nodes to a List
 			 * @param {{values: [], children: {} }} node node of the intern cache Tree
 			 * @param {string} subString spec of the current node, corresponding to its position in the tree
-			 * @returns {void}
+			 * @returns {[{spec: string, values: [], children:[] }]} Nodes as a List
 			 */
 			function addNodeToList( node, subString ) {
 				const children = node.children || {};
