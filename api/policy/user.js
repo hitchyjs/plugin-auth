@@ -40,7 +40,7 @@ module.exports = function() {
 			req.$auth.isAuthenticated = ( uuid != null && uuid === req.params.uuid ) || roles.indexOf( "admin" ) >= 0;
 		},
 		changePassword: ( req, res, next ) => {
-			const current = req.user;
+			const currentUser = req.user;
 			return new Promise( resolve => {
 				switch ( req.method ) {
 					case "PATCH" :
@@ -73,7 +73,7 @@ module.exports = function() {
 							} );
 						return next( "verification needed" );
 					}
-					if ( !current ) {
+					if ( !currentUser ) {
 						res
 							.status( 403 )
 							.json( {
@@ -92,7 +92,7 @@ module.exports = function() {
 					}
 
 					const { User } = api.runtime.models;
-					const { uuid } = current;
+					const { uuid } = currentUser;
 					const user = new User( uuid );
 					return user.load()
 						.then( userRes => {

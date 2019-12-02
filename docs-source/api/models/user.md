@@ -7,7 +7,7 @@
    + SSHA512 encoded password, base64 encoded
    + should only be set using the method setPassword
 ### role
-   + a string listing all roles seperated by spaces
+   + a string listing all roles separated by spaces
 ### strategy
    + strategy used to authenticate the user
    + set by the plugin
@@ -26,6 +26,6 @@ Derives salted hash from provided password.
 ### setPassword
 **Signature:** `hashPassword( password )`
 
-Derives and saves salted hash from provided cleartext password.
+Derives and saves salted hash from provided cleartext password. **The password should only be set using this method**.
 
-* The **password** is the password that needs to be hashed as cleartext. Has type String.
+* The **password** is the password as cleartext. It will be hashed and saved as this.password. Has type String.
