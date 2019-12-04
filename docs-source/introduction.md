@@ -1,6 +1,6 @@
 ---
 prev: false
-next: glossary.md
+next: ./guides/quickstart.md
 ---
 
 # About Hitchy-Plugin-Auth

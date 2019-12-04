@@ -34,21 +34,21 @@ module.exports = function() {
 			if ( !roles ) {
 				throw new Error( "no Roles provided for hasRole PolicyGenerator" );
 			}
-			let cache = {};
+			let parsedRoles = {};
 			if ( Array.isArray( roles ) ) {
 				for ( const role of roles ) {
-					cache[role] = true;
+					parsedRoles[role] = true;
 				}
 			} else if ( roles instanceof Object ) {
-				cache = roles;
+				parsedRoles = roles;
 			} else {
-				cache[roles] = true;
+				parsedRoles[roles] = true;
 			}
 			return ( req, res, next ) => {
 				if ( req.user ) {
 					let authorized = false;
 					for ( const role of req.user.roles ) {
-						if ( cache[role] || role === "admin" ) authorized = true;
+						if ( parsedRoles[role] || role === "admin" ) authorized = true;
 					}
 					if ( authorized ) {
 						next();

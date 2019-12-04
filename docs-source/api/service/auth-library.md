@@ -26,9 +26,15 @@ Removes an AuthRule from the Library by traversing its tree and removing the val
 ### listAuthRules
 **Signature** `listAuthRules( listEmptyNodes )`
 
-Lists all nodes from the tree used to manage the AuthRules. Returns an Array of objects `{spec, values, children}`.
+Lists all nodes from the tree used to manage the AuthRules.
 
 + **listEmptyNodes** is boolean that specifies wether the nodes with no rules should be added to the list.
+
+Returns an Array of objects `{spec, values, children}`.
+
++ **spec** is a string
++ **values** is an object
++ **children** is an object
 
 ### authorize
 **Signature** `authorize( User:{ uuid, roles }, authSpec )`

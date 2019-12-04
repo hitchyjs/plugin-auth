@@ -1,6 +1,6 @@
 ---
-prev: ../glossary.md
-next: defining-models.md
+prev: ../introduction.md
+next: false
 ---
 
 # Quick Start
@@ -43,7 +43,7 @@ hitchy start
 ```
 
 :::warning Hitchy not found?
-If hitchy isn't found this might be due to issues with your Node.js and npm setup. In most cases using **npx** solves this issue for now:
+If Hitchy isn't found this might be due to issues with your Node.js and npm setup. In most cases using **npx** solves this issue for now:
 
 ```bash
 npx hitchy start
@@ -61,15 +61,29 @@ Whenever you want to stop Hitchy press Ctrl+C to gracefully shut it down.
 
 The plugin injects special endpoints for managing a user's authentication.
 
-| endpoint | method | description |
-|----------|--------|-------------|
-| `/api/auth/login` | POST | Takes username and password in request body and uses them for authenticating selected user. |
-| `/api/auth/login` | GET | Does the same as the POST method and is mainly here as a redirect URI for external authorization |
-| `/api/auth/logout` | GET | Drops information on previously authenticated user. |
-| `/api/auth/check` | GET | Fetches status information on currently authenticated user. |
+| endpoint           | method | description                                                                                      |
+|--------------------|--------|--------------------------------------------------------------------------------------------------|
+| `/api/auth/login`  | POST   | Takes username and password in request body and uses them to authenticate selected user.         |
+| `/api/auth/login`  | GET    | Does the same as the POST method and is mainly here as a redirect URI for external authorization |
+| `/api/auth/logout` | GET    | Drops information on previously authenticated user.                                              |
+| `/api/auth/check`  | GET    | Fetches status information on currently authenticated user.                                      |
 
 
-In addition, this plugin is injecting policy requiring authenticated user to have authorization for role `admin` for accessing REST endpoint `/api/user`.
+# Authorization
+Plugin-auth provides [Policies](../api/policy) and [PolicyGenerators](../api/service/policy-generator.md) for a quick setup.
 
+To configure those you can utilize the config utility.
 
+Create a file ``config/auth.js``:
 
+```
+"use strict"
+
+module.exports = {
+  auth: {
+    rules: {
+        
+    }
+  }
+}
+```
