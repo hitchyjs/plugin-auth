@@ -36,6 +36,7 @@ module.exports = function() {
 
 	return {
 		addAuthRule( { authSpecUUID, role, userUUID, positive } ) {
+			DebugLog( "adding ", { authSpecUUID, role, userUUID, positive }," to AuthLibrary" );
 			return new models.AuthSpec( authSpecUUID ).load()
 				.then( authSpec => {
 					const _spec = authSpec.spec;
@@ -69,6 +70,7 @@ module.exports = function() {
 					}
 
 					fillValues( this.findNode( _spec ) );
+					this.logAuthTree();
 				} );
 		},
 		removeAuthRule( { authSpecUUID, role, userUUID, positive } ) {
@@ -218,18 +220,34 @@ module.exports = function() {
 			const rules = this.getNodePath( authSpec );
 
 			const numRules = rules.length;
-			let returnValue;
+			const preparedAuthRules = {};
 			for ( let i = numRules - 1; i > -1; i-- ) {
 				const rule = rules[i];
-				if ( rules[i] ) {
-					returnValue = rule;
+				if ( rule ) {
+					const { role, uuid } = rule;
+					if ( role ) {
+						const { pos, neg } = role;
+						if ( !preparedAuthRules.role ) preparedAuthRules.role = [];
+						if ( pos ) {
+							if ( !preparedAuthRules.role.pos ) preparedAuthRules.role.pos = [];
+							preparedAuthRules.role.pos = preparedAuthRules.role.pos.concat( pos );
+						}
+						if ( neg ) {
+							if ( !preparedAuthRules.role.neg ) preparedAuthRules.role.neg = [];
+							preparedAuthRules.role.neg = preparedAuthRules.role.neg.concat( neg );
+						}
+					}
+					if ( uuid ) {
+						if ( !preparedAuthRules.uuid ) preparedAuthRules.uuid = [];
+						preparedAuthRules.uuid.concat( uuid );
+					}
 					break;
 				}
 			}
-			return returnValue || {};
+			return preparedAuthRules;
 		},
 		authorize( { uuid, roles }, authSpec ) {
-			const values = this.findAuthRules( authSpec );
+			const authRules = this.findAuthRules( authSpec );
 
 			/**
 			 * checks if the rules have an authRule
@@ -257,11 +275,11 @@ module.exports = function() {
 
 			const prioritisePositiveRules = api.config.auth.prioritisePositiveRules || false;
 			if ( prioritisePositiveRules ) {
-				if ( checkRules( values, "pos" ) ) return true;
-				if ( checkRules( values, "neg" ) ) return false;
+				if ( checkRules( authRules, "pos" ) ) return true;
+				if ( checkRules( authRules, "neg" ) ) return false;
 			} else {
-				if ( checkRules( values, "neg" ) ) return false;
-				if ( checkRules( values, "pos" ) ) return true;
+				if ( checkRules( authRules, "neg" ) ) return false;
+				if ( checkRules( authRules, "pos" ) ) return true;
 			}
 
 			return prioritisePositiveRules;

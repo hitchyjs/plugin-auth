@@ -277,11 +277,12 @@ describe( "AuthRuleLibrary", () => {
 		let authUUID;
 		let numRulesAndSpecs = 0;
 		for ( const ruleType of [ true, false ] ) {
-			describe( `${ruleType ? "positive" : "negative"} Rule`, () => {
-				it( `adding AuthSpec with spec ${ruleType ? "positive" : "negative"}.user`, () => {
+			const rule = ruleType ? "positive" : "negative";
+			describe( `${rule} Rule`, () => {
+				it( `adding AuthSpec with spec ${rule}.user`, () => {
 					const { AuthSpec } = server.$hitchy.hitchy.runtime.models;
 					const authSpec = new AuthSpec();
-					authSpec.spec = `${ruleType ? "positive" : "negative"}.user`;
+					authSpec.spec = `${rule}.user`;
 					return authSpec.save().then( ( { uuid } ) => {
 						authUUID = uuid;
 						return AuthSpec.list().then( items => {
@@ -295,7 +296,7 @@ describe( "AuthRuleLibrary", () => {
 					const authRule = new AuthRule();
 					authRule.authSpecUUID = authUUID;
 					authRule.positive = ruleType;
-					authRule.role = `${ruleType ? "positive" : "negative"}.user`;
+					authRule.role = `${rule}.user`;
 					return authRule.save().then( () => {
 						return AuthRule.list().then( items => {
 							items.length.should.eql( numRulesAndSpecs );
@@ -303,9 +304,8 @@ describe( "AuthRuleLibrary", () => {
 					} );
 				} );
 
-				it( `${ruleType ? "allows" : "denies"} user with role: ${ruleType ? "positive" : "negative"}.user`, () => {
+				it( `${ruleType ? "allows" : "denies"} user with role: ${rule}.user`, () => {
 					const library = server.$hitchy.hitchy.runtime.services.AuthLibrary;
-					const rule = ruleType ? "positive" : "negative";
 					library.authorize( { roles: [`${rule}.user`] }, `${rule}.user` ).should.be.eql( ruleType );
 				} );
 			} );
