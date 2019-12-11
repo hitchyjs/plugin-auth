@@ -95,7 +95,7 @@ module.exports = {
 + *rules* is an object or array
     + as an object it has to map "spec" to [AuthRules](../api/models/auth-rule.md) without spec property
     + as an array it has to be a list of [AuthRules](../api/models/auth-rule.md)
-    + is used by the [authorization](../api/service/auth-library.md) service and the [requireAuthentication](../api/policy/auth.md) policy.
+    + is used by the [authorize](../api/service/auth-library.md) service and the [requireAuthentication](../api/policy/auth.md) policy.
     + these will be used if there are no AuthRules in the DataBase
 + *strategies* is an object which maps properties to passport.js strategies.
     + if more than one strategy is provided a defaultStrategy has to be named, otherwise the first one will be used
