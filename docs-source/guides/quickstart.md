@@ -83,7 +83,15 @@ module.exports = {
   auth: {
     rules: {
         
+    },
+    strategies: {
+    
     }
   }
 }
 ```
+
++ *rules* is an object which maps properties to passport.js strategies.
++ *strategies* is an object or array
+    + as an object it has to map "spec" to [AuthRules](../api/models/auth-rule.md) without spec property
+    + as an array it has to be a list of [AuthRules](../api/models/auth-rule.md)
