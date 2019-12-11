@@ -45,7 +45,6 @@ The endpoint `/api/auth/login` is always checking whether there is at least one 
 
 ### High Priority
 
-* Add endpoint for changing current user's password.
 * Add endpoint in scope of `/api/auth` for creating new user account.
 
 ### Medium Priority
