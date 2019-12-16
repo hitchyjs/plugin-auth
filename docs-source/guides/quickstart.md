@@ -1,6 +1,6 @@
 ---
 prev: ../introduction.md
-next: ../api/
+next: ./authorization.md
 ---
 
 # Quick Start
@@ -31,12 +31,13 @@ npm install hitchy hitchy-plugin-auth
 ```
 
 :::tip
-Installing [hitchy-plugin-auth](https://www.npmjs.com/package/hitchy-plugin-auth) is implicitly fetching [hitchy-plugin-odem](https://www.npmjs.com/package/hitchy-plugin-odem) as a dependency. That's why you don't need to install it explicitly here while instantly benefitting from a REST API for accessing your data. 
+Installing [hitchy-plugin-auth](https://www.npmjs.com/package/hitchy-plugin-auth) is 
+implicitly fetching [hitchy-plugin-odem](https://www.npmjs.com/package/hitchy-plugin-odem), [hitchy-plugin-session](https://www.npmjs.com/package/hitchy-plugin-session) and [hitchy-plugin-cookies](https://www.npmjs.com/package/hitchy-plugin-cookies) as a dependency. That's why you don't need to install it explicitly here. 
 :::
 
 ## Start Hitchy
 
-At this point Hitchy is ready for managing blog posts via REST API. Thus, start it with:
+At this point Hitchy is ready. Thus, start it with:
 
 ```bash
 hitchy start
@@ -67,35 +68,3 @@ The plugin injects special endpoints for managing a user's authentication.
 | `/api/auth/login`  | GET    | Does the same as the POST method and is mainly here as a redirect URI for external authorization |
 | `/api/auth/logout` | GET    | Drops information on previously authenticated user.                                              |
 | `/api/auth/check`  | GET    | Fetches status information on currently authenticated user.                                      |
-
-
-# Authorization
-Plugin-auth provides [Policies](../api/policy) and [PolicyGenerators](../api/service/policy-generator.md) for a quick setup.
-
-To configure those you can utilize hitchys config utility.
-
-Create a file ``config/auth.js``:
-
-```
-"use strict"
-
-module.exports = {
-  auth: {
-    rules: {
-        
-    },
-    strategies: {
-    
-    },
-    defaultStrategy: ""
-  }
-}
-```
-
-+ *rules* is an object or array
-    + as an object it has to map "spec" to [AuthRules](../api/models/auth-rule.md) without spec property
-    + as an array it has to be a list of [AuthRules](../api/models/auth-rule.md)
-    + is used by the [authorize](../api/service/auth-library.md) service and the [requireAuthentication](../api/policy/auth.md) policy.
-    + will be used if no AuthRules are in the database during startup
-+ *strategies* is an object which maps properties to passport.js strategies.
-    + if more than one strategy is provided a defaultStrategy has to be named, otherwise the first one will be used
