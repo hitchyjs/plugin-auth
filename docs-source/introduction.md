@@ -5,9 +5,8 @@ next: ./guides/quickstart.md
 
 # About Hitchy-Plugin-Auth
 
-[Hitchy](https://hitchyjs.github.io/core/) is a server-side framework purely written in Javascript. It consists of a core which comes with limited abilities as it is basically capable of essentially handling requests via HTTP and discovering plugins to provide some actual request handlers.
-
-Hitchy-Plugin-Auth is an authorization manager integrating with Hitchy as a discoverable plugin. It provides request handler and policies that handle authorization and authentication.   
+Hitchy-Plugin-Auth is an authorization manager integrating with Hitchy as a discoverable plugin. It provides request 
+handler and policies that handle authorization and authentication.   
 
 ## Authentication
 
