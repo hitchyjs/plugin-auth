@@ -1,6 +1,6 @@
 ---
 prev: ../introduction.md
-next: false
+next: ../api/
 ---
 
 # Quick Start
@@ -72,7 +72,7 @@ The plugin injects special endpoints for managing a user's authentication.
 # Authorization
 Plugin-auth provides [Policies](../api/policy) and [PolicyGenerators](../api/service/policy-generator.md) for a quick setup.
 
-To configure those you can utilize the config utility.
+To configure those you can utilize hitchys config utility.
 
 Create a file ``config/auth.js``:
 
