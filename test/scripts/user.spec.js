@@ -290,12 +290,12 @@ describe( "Hitchy instance with plugin for server-side user authentication and a
 			} );
 	} );
 
-	// it( "allows access on REST API endpoint /api/user/:uuid when uuid is own uuid", () => {
-	// 	return HitchyDev.query.get( "/api/user/" + uuid, null, {
-	// 		cookie: `sessionId=${sid}`,
-	// 	} )
-	// 		.then( res => {
-	// 			res.should.have.status( 200 );
-	// 		} );
-	// } );
+	it.skip( "allows access on REST API endpoint /api/user/:uuid when uuid is own uuid", () => {
+		return HitchyDev.query.get( "/api/user/" + uuid, null, {
+			cookie: `sessionId=${sid}`,
+		} )
+			.then( res => {
+				res.should.have.status( 200 );
+			} );
+	} );
 } );

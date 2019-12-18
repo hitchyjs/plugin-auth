@@ -31,9 +31,7 @@
 "use strict";
 
 const Path = require( "path" );
-
 const HitchyDev = require( "hitchy-server-dev-tools" );
-const freshUUID = () => require( "crypto" ).randomBytes( 16 ).toString( "hex" ).toLowerCase().replace( /^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5" );
 
 require( "should" );
 require( "should-http" );

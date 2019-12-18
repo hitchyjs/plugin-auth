@@ -34,7 +34,7 @@ module.exports = function() {
 	const DebugLog = api.log( "hitchy:plugin:auth:debug" );
 
 	return {
-		self: ( req, res, next ) => {
+		self: ( req, res, next ) => { // eslint-disable-line no-unused-vars
 			const { uuid, roles = [], name } = req.user || {};
 			DebugLog( "user.self:", `user: { uuid: ${uuid}, roles: ${roles}, name: ${name} }`, req.params.uuid );
 			req.$auth.isAuthenticated = ( uuid != null && uuid === req.params.uuid ) || roles.indexOf( "admin" ) >= 0;
