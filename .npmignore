@@ -1,2 +1,7 @@
+.idea
+.vscode
 test
 docs-source
+.eslintrc
+.eslintignore
+.travis.yml
