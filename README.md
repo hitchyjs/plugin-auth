@@ -11,7 +11,7 @@ MIT
 When in root folder of a Hitchy-based application run this command:
 
 ```
-npm i hitchy-plugin-auth hitchy-plugin-session hitchy-plugin-cookies hitchy-odem
+npm i hitchy-plugin-auth hitchy-plugin-session hitchy-plugin-cookies hitchy-plugin-odem
 ```
 
 It will install this plugin as well as its peer dependencies you are in charge of.
