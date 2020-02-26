@@ -36,9 +36,12 @@
   },
   "dependencies": {
     "hitchy-plugin-cookies": "^0.1.1",
-    "hitchy-plugin-odem": "^0.4.5",
+    "hitchy-plugin-odem": "^0.5.3",
     "hitchy-plugin-session": "^0.1.5",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0"
+  },
+  "peerDependencies": {
+    "hitchy": "^0.4.11"
   }
 }

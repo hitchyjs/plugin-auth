@@ -57,8 +57,10 @@ module.exports = function() {
 			const defaultStrategy = services.AuthStrategies.defaultStrategy();
 
 			req.fetchBody().then( body => {
-				req.body = body;
-				api.runtime.services.Passport.authenticate( strategy || defaultStrategy )( req, res, err => {
+				const reqProxy = new Proxy( req, {
+					get: ( target, prop ) => ( prop === "body" ? body : target[prop] )
+				} );
+				api.runtime.services.Passport.authenticate( strategy || defaultStrategy )( reqProxy, res, err => {
 					if ( req.user ) {
 						const { uuid, name, roles } = req.user;
 						DebugLog( "authenticating: ", { uuid, name, roles, session: req.session.user } );
